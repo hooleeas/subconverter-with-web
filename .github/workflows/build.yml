@@ -334,26 +334,32 @@ jobs:
             exit 1
           }
           Write-Host "::notice::PROBE health ok"
+          Start-Sleep 10
           curl.exe -fsS http://127.0.0.1:3101/version
           Write-Host "::notice::PROBE version ok"
           $body = '{"sources":["vmess://eyJ2IjoiMiIsInBzIjoidGVzdCIsImFkZCI6IjEuMi4zLjQiLCJwb3J0IjoiNDQzIiwiaWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJhaWQiOiIwIiwic2N5IjoiYXV0byIsIm5ldCI6IndzIiwidHlwZSI6Im5vbmUiLCJob3N0IjoiIiwicGF0aCI6Ii8iLCJ0bHMiOiJ0bHMifQ=="],"rulesUrl":"local://acl4ssr/Clash/config/ACL4SSR.ini","backendId":"builtin","name":"smoke"}'
-          $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
-          $sid = ($resp.Content | ConvertFrom-Json).id
-          Write-Host "::notice::PROBE subscribe ok sid=$sid"
-          try {
-            $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash" -TimeoutSec 120
-          } catch {
-            Write-Host "::error::clash request failed: $($_.Exception.Message)"
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-            exit 1
+          $clashOk = $false
+          $clashBytes = 0
+          for ($attempt = 0; $attempt -lt 4 -and -not $clashOk; $attempt++) {
+            if ($attempt -gt 0) { Start-Sleep 5 }
+            $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
+            $sid = ($resp.Content | ConvertFrom-Json).id
+            Write-Host "::notice::PROBE subscribe ok sid=$sid attempt=$attempt"
+            try {
+              $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash" -TimeoutSec 120
+              $clashBytes = $clash.RawContentLength
+              if ($clashBytes -ge 100000) { $clashOk = $true }
+            } catch {
+              Write-Host "::notice::PROBE clash attempt $attempt failed: $($_.Exception.Message)"
+            }
           }
-          Write-Host "::notice::PROBE clash ok bytes=$($clash.RawContentLength)"
-          Write-Host "clash bytes: $($clash.RawContentLength)"
-          if ($clash.RawContentLength -lt 100000) {
+          Write-Host "::notice::PROBE clash ok bytes=$clashBytes"
+          Write-Host "clash bytes: $clashBytes"
+          if (-not $clashOk) {
             $raw = ""
             if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
             $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
-            Write-Host "::error::clash too small, smoke log: $tail"
+            Write-Host "::error::clash too small or missing after retries, smoke log: $tail"
             Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
             exit 1
           }
