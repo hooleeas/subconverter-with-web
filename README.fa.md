@@ -137,7 +137,7 @@ npm run deploy:pages
 
 ```sh
 # 1. نصب CLI (فقط یک بار)
-npm i -g @edgeone/cli
+npm i -g edgeone
 
 # 2. استقرار از ریشه پروژه
 edgeone makers deploy

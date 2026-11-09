@@ -135,7 +135,7 @@ npm run deploy:pages
 
 ```sh
 # 1. 装 CLI（一次就行）
-npm i -g @edgeone/cli
+npm i -g edgeone
 
 # 2. 在项目根目录部署
 edgeone makers deploy
