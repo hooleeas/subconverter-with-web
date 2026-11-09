@@ -340,7 +340,13 @@ jobs:
           $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
           $sid = ($resp.Content | ConvertFrom-Json).id
           Write-Host "::notice::PROBE subscribe ok sid=$sid"
-          $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash"
+          try {
+            $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash" -TimeoutSec 120
+          } catch {
+            Write-Host "::error::clash request failed: $($_.Exception.Message)"
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            exit 1
+          }
           Write-Host "::notice::PROBE clash ok bytes=$($clash.RawContentLength)"
           Write-Host "clash bytes: $($clash.RawContentLength)"
           if ($clash.RawContentLength -lt 100000) {
