@@ -25,13 +25,45 @@ VLESS、VMess、Trojan、Shadowsocks、ShadowsocksR、Snell、Hysteria、Hysteri
 
 ### Docker
 
+Run the current image:
+
+```sh
+docker run -d --name subconverter-with-web --restart unless-stopped \
+  -p 3000:3000 -v "$PWD/data:/app/data" \
+  ghcr.io/hooleeas/subconverter-with-web:latest
+```
+
+Check the service:
+
+```sh
+curl http://localhost:3000/version
+```
+
+It should return the product name and the current version.
+
+Docker Compose:
+
+```yaml
+services:
+  subconverter-with-web:
+    image: ghcr.io/hooleeas/subconverter-with-web:latest
+    container_name: subconverter-with-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+```
+
+To build the image locally instead:
+
 ```sh
 docker build -t subconverter-with-web .
 docker run -d --name subconverter-with-web --restart unless-stopped \
   -p 3000:3000 -v "$PWD/data:/app/data" subconverter-with-web
 ```
 
-打开 `http://localhost:3000`。容器内 SQLite 文件为 `/app/data/app.db`。
+Open `http://localhost:3000`. The SQLite file inside the container is `/app/data/app.db`.
 
 ### 本地运行
 
