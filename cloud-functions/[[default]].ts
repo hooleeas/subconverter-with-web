@@ -21,7 +21,27 @@ const assets = {
   }
 };
 
+/**
+ * EdgeOne's node-function runtime invokes the module's fetch() directly with
+ * plain env vars, bypassing onRequest — so c.env.STORE would be missing and
+ * every DB-backed route returns "Database binding is missing" (503).
+ * Inject STORE at the fetch boundary so it works no matter how the app is
+ * invoked. STATIC is intentionally NOT injected: static files are already
+ * served correctly by the edge layer from .edgeone/assets/.
+ */
+const fetchWithStore = (request: Request, env?: any) =>
+  app.fetch(request, { ...(env || {}), STORE: store } as never);
+
+// Belt and braces: also inject via middleware in case the runtime calls the
+// raw Hono app's fetch instead of the default export.
+app.use('*', async (c, next) => {
+  (c.env as any).STORE = store;
+  await next();
+});
+
 export async function onRequest(context: any) {
   const request = context.request as Request;
-  return app.fetch(request, { STORE: store, STATIC: assets } as never);
+  return fetchWithStore(request, (context as any).env);
 }
+
+export default { fetch: fetchWithStore };
