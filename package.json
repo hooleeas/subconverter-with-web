@@ -10,7 +10,6 @@
     "dev": "tsx watch src/node.ts",
     "build": "tsc",
     "start": "node dist/node.js",
-    "deploy:worker": "wrangler deploy",
     "deploy:pages": "wrangler pages deploy --cwd pages ../public"
   },
   "dependencies": {

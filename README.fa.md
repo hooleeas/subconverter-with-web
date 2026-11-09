@@ -19,13 +19,12 @@ flowchart TB
     A --- DB[(ذخیره‌سازی)]
 ```
 
-یک کد، چهار استقرار، یک رابط ذخیره‌سازی (`Store`):
+یک کد، سه استقرار، یک رابط ذخیره‌سازی (`Store`):
 
 ```mermaid
 flowchart LR
     subgraph استقرارها
         D[Docker] --> SQLite[(فایل SQLite)]
-        W[Cloudflare Workers] --> D1[(Cloudflare D1)]
         P[Cloudflare Pages] --> D1
         E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
@@ -34,7 +33,6 @@ flowchart LR
 | استقرار | ذخیره‌سازی | نقطه ورود |
 |---|---|---|
 | Docker | فایل SQLite (`/app/data/app.db`) | `src/node.ts` |
-| Cloudflare Workers | D1 (`subconverter`) | `src/index.ts` (`wrangler.toml`) |
 | Cloudflare Pages | D1 (`subconverter`) | `pages/functions/[[path]].ts` |
 | EdgeOne Makers | Blob (`subconverter`) | `cloud-functions/[[default]].ts` |
 
@@ -107,23 +105,10 @@ services:
 
 پلتفرم‌های ایمیج: `linux/amd64`، `linux/arm64`، `linux/arm/v7`.
 
-### Cloudflare Workers
-
-```sh
-# 1. ساخت پایگاه D1
-npx wrangler d1 create subconverter
-
-# 2. شناسه برگشتی را در wrangler.toml بگذارید
-#    (جای REPLACE_WITH_D1_DATABASE_ID)
-
-# 3. استقرار
-npm run deploy:worker
-```
-
 ### Cloudflare Pages
 
 ```sh
-# 1. ساخت پایگاه D1 (مانند بالا)
+# 1. ساخت پایگاه D1
 npx wrangler d1 create subconverter
 
 # 2. شناسه برگشتی را در pages/wrangler.jsonc بگذارید
@@ -179,7 +164,6 @@ edgeone makers deploy
 npm ci
 npm run build   # tsc
 npm run dev     # سرور محلی روی :3000 (SQLite)
-npx wrangler dev --port 3102   # Workers با D1 محلی
 ```
 
 ## مجوز

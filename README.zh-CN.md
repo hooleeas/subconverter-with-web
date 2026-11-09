@@ -17,13 +17,12 @@ flowchart TB
     A --- DB[(存储)]
 ```
 
-一套代码，四种部署，同一个存储接口（`Store`）：
+一套代码，三种部署，同一个存储接口（`Store`）：
 
 ```mermaid
 flowchart LR
     subgraph 部署方式
         D[Docker] --> SQLite[(SQLite 文件)]
-        W[Cloudflare Workers] --> D1[(Cloudflare D1)]
         P[Cloudflare Pages] --> D1
         E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
@@ -32,7 +31,6 @@ flowchart LR
 | 部署方式 | 存储 | 入口 |
 |---|---|---|
 | Docker | SQLite 文件（`/app/data/app.db`） | `src/node.ts` |
-| Cloudflare Workers | D1（`subconverter`） | `src/index.ts`（`wrangler.toml`） |
 | Cloudflare Pages | D1（`subconverter`） | `pages/functions/[[path]].ts` |
 | EdgeOne Makers | Blob 存储（`subconverter`） | `cloud-functions/[[default]].ts` |
 
@@ -105,23 +103,10 @@ services:
 
 镜像平台：`linux/amd64`、`linux/arm64`、`linux/arm/v7`。
 
-### Cloudflare Workers
-
-```sh
-# 1. 建 D1 数据库
-npx wrangler d1 create subconverter
-
-# 2. 把返回的 database_id 填进 wrangler.toml
-#    （替换 REPLACE_WITH_D1_DATABASE_ID）
-
-# 3. 部署
-npm run deploy:worker
-```
-
 ### Cloudflare Pages
 
 ```sh
-# 1. 建 D1 数据库（同上）
+# 1. 建 D1 数据库
 npx wrangler d1 create subconverter
 
 # 2. 把返回的 database_id 填进 pages/wrangler.jsonc
@@ -177,7 +162,6 @@ Blob 存储不用配置，`subconverter` 这个库第一次写数据时自动建
 npm ci
 npm run build   # tsc
 npm run dev     # 本地跑在 :3000（SQLite）
-npx wrangler dev --port 3102   # Workers + 本地 D1 模拟
 ```
 
 ## 协议

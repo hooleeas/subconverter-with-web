@@ -17,13 +17,12 @@ flowchart TB
     A --- DB[(Storage)]
 ```
 
-One codebase, four deployments, one storage interface (`Store`):
+One codebase, three deployments, one storage interface (`Store`):
 
 ```mermaid
 flowchart LR
     subgraph Deployments
         D[Docker] --> SQLite[(SQLite file)]
-        W[Cloudflare Workers] --> D1[(Cloudflare D1)]
         P[Cloudflare Pages] --> D1
         E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
@@ -32,7 +31,6 @@ flowchart LR
 | Deployment | Storage | Entry point |
 |---|---|---|
 | Docker | SQLite file (`/app/data/app.db`) | `src/node.ts` |
-| Cloudflare Workers | D1 (`subconverter`) | `src/index.ts` (`wrangler.toml`) |
 | Cloudflare Pages | D1 (`subconverter`) | `pages/functions/[[path]].ts` |
 | EdgeOne Makers | Blob store (`subconverter`) | `cloud-functions/[[default]].ts` |
 
@@ -105,23 +103,10 @@ services:
 
 Image platforms: `linux/amd64`, `linux/arm64`, `linux/arm/v7`.
 
-### Cloudflare Workers
-
-```sh
-# 1. Create the D1 database
-npx wrangler d1 create subconverter
-
-# 2. Put the returned database_id into wrangler.toml
-#    (replace REPLACE_WITH_D1_DATABASE_ID)
-
-# 3. Deploy
-npm run deploy:worker
-```
-
 ### Cloudflare Pages
 
 ```sh
-# 1. Create the D1 database (same as above)
+# 1. Create the D1 database
 npx wrangler d1 create subconverter
 
 # 2. Put the returned database_id into pages/wrangler.jsonc
@@ -177,7 +162,6 @@ Admin login is optional: if no admin account is set, the panel is open. Set one 
 npm ci
 npm run build   # tsc
 npm run dev     # local server on :3000 (SQLite)
-npx wrangler dev --port 3102   # Workers with local D1
 ```
 
 ## License
