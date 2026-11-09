@@ -27,9 +27,14 @@ function resolveRuleUrl(resource: string, templateUrl: string): string {
 }
 
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch):Promise<string>{
- const parsed=new URL(url);if(!['http:','https:'].includes(parsed.protocol))throw new Error('Only HTTP(S) rule URLs are allowed');
+ // local:// rule files ship on disk for Docker/Node (cached at startup) but
+ // Workers/Pages/EdgeOne have no filesystem: fetch them from the official
+ // ACL4SSR repo instead, then the caller caches the result.
+ let fetchUrl=url;
+ if(url.startsWith(LOCAL_RULE_PREFIX))fetchUrl='https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/'+url.slice(LOCAL_RULE_PREFIX.length);
+ const parsed=new URL(fetchUrl);if(!['http:','https:'].includes(parsed.protocol))throw new Error('Only HTTP(S) rule URLs are allowed');
  let response:Response;
- try{response=await fetcher(url,{signal:AbortSignal.timeout(15000)})}
+ try{response=await fetcher(fetchUrl,{signal:AbortSignal.timeout(15000)})}
  catch(error){throw new Error(`Could not fetch rule resource ${parsed.host}: ${errorMessage(error)}`)}
  if(!response.ok)throw new Error(`Could not fetch rule resource ${parsed.host}: HTTP ${response.status}`);
  return response.text();
