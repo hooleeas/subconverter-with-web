@@ -44,7 +44,7 @@ app.post('/api/subscribe', async c => {
   if (!db) return c.json({ error: 'Database binding is missing' }, 503);
   const body = await readJson(c);
   if (!body.ok) return c.json({ error: 'Invalid JSON body' }, 400);
-  const input=body.value as any, id=String(input.path||'').trim()||crypto.randomUUID();
+  const input=body.value as any, id=await resolveAggregateId(db,input);
   if(!validAggregatePath(id))return c.json({error:'Link path must use 3-128 letters, numbers, hyphens or underscores'},400);
   if(await db.get('aggregate:'+id)!==null)return c.json({error:'Link path already exists'},409);
   const created=await makeAggregateRecord(db,input,id,'public');
@@ -168,7 +168,7 @@ app.post('/api/admin/links', async c => {
   if (!(await authorized(c))) return c.json({ error: '管理员账号或密码错误，或尚未配置账号密码' }, 401);
   const db=store(c); if(!db)return c.json({error:'Database binding is missing'},503);
   const body=await readJson(c); if(!body.ok)return c.json({error:'Invalid JSON body'},400);
-  const input=body.value as any,id=String(input.path||'').trim()||crypto.randomUUID(),kind=input.kind==='self'?'self':'public';
+  const input=body.value as any,id=await resolveAggregateId(db,input),kind=input.kind==='self'?'self':'public';
   if(!validAggregatePath(id))return c.json({error:'Link path must use 3-128 letters, numbers, hyphens or underscores'},400);
   if(await db.get('aggregate:'+id)!==null)return c.json({error:'Link path already exists'},409);
   const created=await makeAggregateRecord(db,input,id,kind);if(!created.ok)return c.json({error:created.error},400);
@@ -471,6 +471,7 @@ async function readJson(c: any): Promise<{ok:true;value:unknown}|{ok:false}> { t
 function publicUrl(c:any,path:string):string{const u=new URL(c.req.url);const proto=(c.req.header('x-forwarded-proto')||'').split(',')[0].trim()||u.protocol.replace(':','');const p=path.startsWith('/')?path:'/'+path;return proto+'://'+u.host+p}
 function aggregatePath(record:any,id:string):string{return (record.owner===true||record.kind==='self'?'/':'/api/')+id}
 function validAggregatePath(path:string):boolean{return path.length>=3&&path.length<=128&&/^[-A-Za-z0-9_]+$/.test(path)&&!['admin','api','subscribe','subscriptions','public','rules','health','convert','config'].includes(path.toLowerCase())}
+async function resolveAggregateId(db:Store,input:any):Promise<string>{const path=String(input.path||'').trim();if(path)return path;const name=String(input.name||'').trim();if(name&&validAggregatePath(name)&&await db.get('aggregate:'+name)===null)return name;return crypto.randomUUID()}
 function constantTimeEqual(a:string,b:string):boolean{if(a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0}
 async function makeAggregateRecord(db:Store,input:any,id:string,kind:'public'|'self',previous?:any):Promise<{ok:true;value:any}|{ok:false;error:string}>{
   const groupsParsed=await parseAggregateGroups(db,input.groups??previous?.groups);if(!groupsParsed.ok)return groupsParsed;
