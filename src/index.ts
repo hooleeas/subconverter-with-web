@@ -434,7 +434,7 @@ app.get('*', async c => {
   const path=new URL(c.req.url).pathname;
   if(path==='/admin.html')return c.notFound();
   const db=store(c);let adminPath='/admin';if(db){try{adminPath=String(JSON.parse((await db.get('config:adminPath'))||'"/admin"')||'/admin')}catch{}}
-  if(path===adminPath){const page=new Request(new URL('/admin.html',c.req.url),c.req.raw);if(c.env?.ASSETS)return c.env.ASSETS.fetch(page);if(c.env?.STATIC)return c.env.STATIC.fetch(page)}
+  if(path===adminPath){const page=new Request(new URL('/admin.html',c.req.url),c.req.raw);if(c.env?.ASSETS){const res=await c.env.ASSETS.fetch(page);if(res.status===308||res.status===301){const alt=new Request(new URL('/admin-page',c.req.url),c.req.raw);const altRes=await c.env.ASSETS.fetch(alt);if(altRes.status===200)return new Response(altRes.body,{status:200,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});return altRes}return res}if(c.env?.STATIC)return c.env.STATIC.fetch(page)}
   if (c.env?.ASSETS) return c.env.ASSETS.fetch(c.req.raw);
   if (c.env?.STATIC) return c.env.STATIC.fetch(c.req.raw);
   return c.text('Static UI is served by the Node adapter or Cloudflare assets binding.', 404);
