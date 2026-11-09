@@ -30,7 +30,7 @@ Run the current image:
 ```sh
 docker run -d --name subconverter-with-web --restart unless-stopped \
   -p 3000:3000 -v "$PWD/data:/app/data" \
-  ghcr.io/hooleeas/subconverter-with-web:latest
+  hooleeas/subconverter-with-web:latest
 ```
 
 Check the service:
@@ -46,7 +46,7 @@ Docker Compose:
 ```yaml
 services:
   subconverter-with-web:
-    image: ghcr.io/hooleeas/subconverter-with-web:latest
+    image: hooleeas/subconverter-with-web:latest
     container_name: subconverter-with-web
     ports:
       - "3000:3000"
