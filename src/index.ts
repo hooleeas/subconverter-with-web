@@ -28,7 +28,7 @@ app.post('/api/admin/setup', async c => {
   const input=body.value as any,username=String(input.username||'').trim(),password=String(input.password||'');
   if(!validAdminCredentials(username,password))return c.json({error:'账号须为 1-64 位字母、数字、点、下划线或连字符；密码至少 8 位'},400);
   const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,'0')).join('');
-  const iterations=120000,passwordHash=await hashAdminPassword(password,salt,iterations);
+  const iterations=100000,passwordHash=await hashAdminPassword(password,salt,iterations);
   if(await db.get('auth:admin'))return c.json({error:'管理员账号已设置，请登录'},409);
   await db.put('auth:admin',JSON.stringify({username,salt,passwordHash,iterations}));
   return c.json({ok:true});
@@ -125,7 +125,7 @@ app.put('/api/admin/credentials', async c => {
   const body=await readJson(c);if(!body.ok)return c.json({error:'Invalid JSON body'},400);
   const input=body.value as any,username=String(input.username||'').trim(),password=String(input.password||'');
   if(!validAdminCredentials(username,password))return c.json({error:'账号须为 1-64 位字母、数字、点、下划线或连字符；密码至少 8 位'},400);
-  const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,'0')).join(''),iterations=120000;
+  const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,'0')).join(''),iterations=100000;
   const passwordHash=await hashAdminPassword(password,salt,iterations);
   await db.put('auth:admin',JSON.stringify({username,salt,passwordHash,iterations}));
   return c.json({ok:true,account:username});
@@ -462,6 +462,7 @@ async function verifyAdminCredentials(db:Store,username:string,password:string):
   try{const record=JSON.parse(raw) as {username:string;salt:string;passwordHash:string;iterations:number};if(!constantTimeEqual(username,record.username))return false;const hash=await hashAdminPassword(password,record.salt,record.iterations);return constantTimeEqual(hash,record.passwordHash)}catch{return false}
 }
 async function hashAdminPassword(password:string,saltHex:string,iterations:number):Promise<string>{
+  iterations=Math.max(1,Math.min(100000,Math.floor(iterations)||100000));
   const salt=Uint8Array.from(saltHex.match(/.{2}/g)||[],part=>parseInt(part,16));
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
   const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations,hash:'SHA-256'},key,256);
