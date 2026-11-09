@@ -2,7 +2,7 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY src ./src
 COPY public ./public
 RUN npm run build
