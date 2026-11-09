@@ -27,6 +27,7 @@ jobs:
             smoke: docker
             docker_platform: linux/386
             docker_image: i386/alpine:3.22
+            docker_setup: apk add --no-cache nodejs >/dev/null 2>&1;
           - arch: amd64
             artifact: subconverter-with-web_linux64
             os: ubuntu-24.04
@@ -39,6 +40,7 @@ jobs:
             smoke: docker
             docker_platform: linux/arm/v7
             docker_image: arm32v7/debian:bookworm-slim
+            docker_setup: apt-get update >/dev/null 2>&1 && apt-get install -y libatomic1 >/dev/null 2>&1;
           - arch: aarch64
             artifact: subconverter-with-web_aarch64
             os: ubuntu-24.04-arm
@@ -89,7 +91,7 @@ jobs:
           fi
       - name: Build single executable
         run: |
-          printf '%s' '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false}' > sea/sea-config.json
+          printf '%s' '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false,"useSnapshot":false}' > sea/sea-config.json
           node --experimental-sea-config sea/sea-config.json
           cp "$TARGET_NODE" subconverter-with-web
           chmod +x subconverter-with-web
@@ -124,7 +126,8 @@ jobs:
           if [ -z "$ok" ]; then
             echo "server did not start"
             TAIL=$(tail -c 1500 "$RUNNER_TEMP/smoke.log" 2>/dev/null | tr '\n' ' ')
-            echo "::error::smoke log: $TAIL"
+            if kill -0 $SRVPID 2>/dev/null; then EXITC="still-running"; else wait $SRVPID 2>/dev/null; EXITC=$?; fi
+            echo "::error::server exit: $EXITC, smoke log: $TAIL"
             exit 1
           fi
           curl -fsS http://127.0.0.1:3101/version
@@ -139,11 +142,11 @@ jobs:
       - name: Smoke test (docker)
         if: matrix.smoke == 'docker'
         run: |
-          docker run -d --platform "${{ matrix.docker_platform }}" --name smoke -p 3101:3101 -v "$PWD/stage:/work" -w /work -e PORT=3101 -e DB_PATH=/tmp/smoke/app.db "${{ matrix.docker_image }}" /work/subconverter-with-web
+          docker run -d --platform "${{ matrix.docker_platform }}" --name smoke -p 3101:3101 -v "$PWD/stage:/work" -w /work -e PORT=3101 -e DB_PATH=/tmp/app.db "${{ matrix.docker_image }}" sh -c "${{ matrix.docker_setup }} exec /work/subconverter-with-web"
           trap 'docker stop smoke >/dev/null 2>&1 || true; docker rm smoke >/dev/null 2>&1 || true' EXIT
           ok=""
           i=1
-          while [ $i -le 60 ]; do
+          while [ $i -le 180 ]; do
             if curl -fsS -m 2 http://127.0.0.1:3101/api/health >/dev/null 2>&1; then ok=1; break; fi
             sleep 1
             i=$((i+1))
@@ -151,7 +154,8 @@ jobs:
           if [ -z "$ok" ]; then
             echo "server did not start"
             TAIL=$(docker logs smoke 2>&1 | tail -c 1500 | tr '\n' ' ')
-            echo "::error::docker log: $TAIL"
+            EXITC=$(docker inspect -f '{{.State.ExitCode}}' smoke 2>/dev/null || echo "?")
+            echo "::error::container exit: $EXITC, docker log: $TAIL"
             exit 1
           fi
           curl -fsS http://127.0.0.1:3101/version
@@ -223,12 +227,12 @@ jobs:
           echo "TARGET_NODE=target-node/bin/node" >> "$GITHUB_ENV"
       - name: Build single executable
         run: |
-          printf '%s' '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false}' > sea/sea-config.json
+          printf '%s' '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false,"useSnapshot":false}' > sea/sea-config.json
           node --experimental-sea-config sea/sea-config.json
           cp "$TARGET_NODE" subconverter-with-web
           chmod +x subconverter-with-web
-          node node_modules/postject/dist/cli.js subconverter-with-web NODE_SEA_BLOB sea/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
           codesign --remove-signature subconverter-with-web || true
+          node node_modules/postject/dist/cli.js subconverter-with-web NODE_SEA_BLOB sea/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
           codesign --sign - --force subconverter-with-web
       - name: Stage artifact
         run: |
@@ -259,7 +263,8 @@ jobs:
           if [ -z "$ok" ]; then
             echo "server did not start"
             TAIL=$(tail -c 1500 "$RUNNER_TEMP/smoke.log" 2>/dev/null | tr '\n' ' ')
-            echo "::error::smoke log: $TAIL"
+            if kill -0 $SRVPID 2>/dev/null; then EXITC="still-running"; else wait $SRVPID 2>/dev/null; EXITC=$?; fi
+            echo "::error::server exit: $EXITC, smoke log: $TAIL"
             exit 1
           fi
           curl -fsS http://127.0.0.1:3101/version
@@ -315,7 +320,7 @@ jobs:
           Expand-Archive node.zip -DestinationPath target-node
       - name: Build single executable
         run: |
-          Set-Content -Path sea/sea-config.json -Value '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false}' -NoNewline
+          Set-Content -Path sea/sea-config.json -Value '{"main":"sea/app.cjs","output":"sea/sea-prep.blob","disableExperimentalSEAWarning":true,"useCodeCache":false,"useSnapshot":false}' -NoNewline
           node --experimental-sea-config sea/sea-config.json
           Copy-Item "target-node/node-v${{ env.NODE_VERSION }}-${{ matrix.node_dist }}/node.exe" -Destination "subconverter-with-web.exe"
           node node_modules/postject/dist/cli.js subconverter-with-web.exe NODE_SEA_BLOB sea/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
@@ -357,6 +362,13 @@ jobs:
               Write-Host "::error::clash too small, smoke log: $tail"
               throw "clash output too small"
             }
+          } catch {
+            $raw = ""
+            if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
+            if (-not $raw -and (Test-Path "$env:RUNNER_TEMP/smoke.log")) { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.log") }
+            $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
+            Write-Host "::error::smoke log: $tail"
+            throw
           } finally { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
       - name: Upload
         uses: actions/upload-artifact@v4
