@@ -10,4 +10,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "subconverter"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "8a28d0bd-c80b-4487-bff6-3531ffb24135"
