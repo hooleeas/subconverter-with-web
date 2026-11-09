@@ -17,6 +17,7 @@ env:
 jobs:
   linux_build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86
@@ -61,7 +62,18 @@ jobs:
           npm run build
           npm install --no-save --no-audit --no-fund webpack@5.102.1 webpack-cli@5.1.4 postject@1.0.0-alpha.6
       - name: Bundle
-        run: node node_modules/webpack/bin/webpack.js --entry ./dist/node.js --target node --mode production --experiments-top-level-await --output-path ./sea --output-filename app.cjs < /dev/null
+        run: |
+          cat > webpack.config.cjs <<'EOF'
+          const path = require('path');
+          module.exports = {
+            mode: 'production',
+            target: 'node',
+            entry: './dist/node.js',
+            output: { path: path.resolve(__dirname, 'sea'), filename: 'app.cjs' },
+            experiments: { topLevelAwait: true },
+          };
+          EOF
+          node node_modules/webpack/bin/webpack.js --config webpack.config.cjs < /dev/null
       - name: Download target Node runtime
         run: |
           if [ "${{ matrix.node_dist }}" = "alpine-x86" ]; then
@@ -137,16 +149,17 @@ jobs:
 
   macos_build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86
             artifact: subconverter-with-web_darwin64
-            os: macos-14
+            os: macos-15
             node_dist: darwin-x64
             run_prefix: arch -x86_64
           - arch: arm
             artifact: subconverter-with-web_darwinarm
-            os: macos-14
+            os: macos-15
             node_dist: darwin-arm64
             run_prefix: ''
     runs-on: ${{ matrix.os }}
@@ -168,7 +181,18 @@ jobs:
           npm run build
           npm install --no-save --no-audit --no-fund webpack@5.102.1 webpack-cli@5.1.4 postject@1.0.0-alpha.6
       - name: Bundle
-        run: node node_modules/webpack/bin/webpack.js --entry ./dist/node.js --target node --mode production --experiments-top-level-await --output-path ./sea --output-filename app.cjs < /dev/null
+        run: |
+          cat > webpack.config.cjs <<'EOF'
+          const path = require('path');
+          module.exports = {
+            mode: 'production',
+            target: 'node',
+            entry: './dist/node.js',
+            output: { path: path.resolve(__dirname, 'sea'), filename: 'app.cjs' },
+            experiments: { topLevelAwait: true },
+          };
+          EOF
+          node node_modules/webpack/bin/webpack.js --config webpack.config.cjs < /dev/null
       - name: Download target Node runtime
         run: |
           curl -fsSL "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-${{ matrix.node_dist }}.tar.gz" -o node.tar.gz
@@ -222,6 +246,7 @@ jobs:
 
   windows_build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86
@@ -248,7 +273,9 @@ jobs:
           npm run build
           npm install --no-save --no-audit --no-fund webpack@5.102.1 webpack-cli@5.1.4 postject@1.0.0-alpha.6
       - name: Bundle
-        run: node node_modules/webpack/bin/webpack.js --entry ./dist/node.js --target node --mode production --experiments-top-level-await --output-path ./sea --output-filename app.cjs
+        run: |
+          Set-Content -Path webpack.config.cjs -Value "const path = require('path');", "module.exports = {", "  mode: 'production',", "  target: 'node',", "  entry: './dist/node.js',", "  output: { path: path.resolve(__dirname, 'sea'), filename: 'app.cjs' },", "  experiments: { topLevelAwait: true },", "};"
+          node node_modules/webpack/bin/webpack.js --config webpack.config.cjs
       - name: Download target Node runtime
         run: |
           Invoke-WebRequest -Uri "https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-${{ matrix.node_dist }}.zip" -OutFile node.zip
