@@ -348,6 +348,9 @@ jobs:
             $dump = curl.exe -s "http://127.0.0.1:3101/api/admin/data"
             $found = $dump.Contains($sid)
             Write-Host "::notice::PROBE store has sid in admin-data: $found"
+            $codeBase = curl.exe -s -o NUL -w "%{http_code}" "http://127.0.0.1:3101/api/$sid"
+            $codeB64 = curl.exe -s -o NUL -w "%{http_code}" "http://127.0.0.1:3101/api/$sid?b64"
+            Write-Host "::notice::PROBE base http=$codeBase b64 http=$codeB64"
             $code = curl.exe -s -o "$env:RUNNER_TEMP/clash.yaml" -w "%{http_code}" "http://127.0.0.1:3101/api/$sid?clash"
             $sz = 0
             if (Test-Path "$env:RUNNER_TEMP/clash.yaml") { $sz = (Get-Item "$env:RUNNER_TEMP/clash.yaml").Length }
