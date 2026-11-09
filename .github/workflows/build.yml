@@ -311,7 +311,6 @@ jobs:
           Set-Content -Path stage/README.md -Value '# subconverter-with-web (portable)', 'Run: `run.bat` (or `node.exe dist/node.js`)', 'Env: `PORT` (default 3000), `DB_PATH` (default data/app.db),', '`ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).', 'Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to `node.exe`.'
       - name: Smoke test
         run: |
-          Write-Host "::error::PROBE smoke start"
           New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP/smoke" | Out-Null
           $env:PORT = 3101
           $env:DB_PATH = "$env:RUNNER_TEMP/smoke/app.db"
@@ -333,10 +332,8 @@ jobs:
             Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
             exit 1
           }
-          Write-Host "::notice::PROBE health ok"
           Start-Sleep 10
           curl.exe -fsS http://127.0.0.1:3101/version
-          Write-Host "::notice::PROBE version ok"
           $body = '{"sources":["vmess://eyJ2IjoiMiIsInBzIjoidGVzdCIsImFkZCI6IjEuMi4zLjQiLCJwb3J0IjoiNDQzIiwiaWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJhaWQiOiIwIiwic2N5IjoiYXV0byIsIm5ldCI6IndzIiwidHlwZSI6Im5vbmUiLCJob3N0IjoiIiwicGF0aCI6Ii8iLCJ0bHMiOiJ0bHMifQ=="],"rulesUrl":"local://acl4ssr/Clash/config/ACL4SSR.ini","backendId":"builtin","name":"smoke"}'
           $clashOk = $false
           $clashBytes = 0
@@ -344,21 +341,12 @@ jobs:
             if ($attempt -gt 0) { Start-Sleep 5 }
             $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
             $sid = ($resp.Content | ConvertFrom-Json).id
-            Write-Host "::notice::PROBE subscribe ok sid=$sid attempt=$attempt"
-            $dump = curl.exe -s "http://127.0.0.1:3101/api/admin/data"
-            $found = $dump.Contains($sid)
-            Write-Host "::notice::PROBE store has sid in admin-data: $found"
-            $baseUrl = "http://127.0.0.1:3101/api/" + $sid
-            $codeBase = curl.exe -s -o NUL -w "%{http_code}" $baseUrl
-            $codeB64 = curl.exe -s -o NUL -w "%{http_code}" ($baseUrl + "?b64")
-            Write-Host "::notice::PROBE base http=$codeBase b64 http=$codeB64"
-            $code = curl.exe -s -o "$env:RUNNER_TEMP/clash.yaml" -w "%{http_code}" ($baseUrl + "?clash")
+            $clashUrl = "http://127.0.0.1:3101/api/" + $sid + "?clash"
+            $code = curl.exe -s -o "$env:RUNNER_TEMP/clash.yaml" -w "%{http_code}" $clashUrl
             $sz = 0
             if (Test-Path "$env:RUNNER_TEMP/clash.yaml") { $sz = (Get-Item "$env:RUNNER_TEMP/clash.yaml").Length }
-            Write-Host "::notice::PROBE clash attempt $attempt http=$code bytes=$sz"
             if ($code -eq "200" -and $sz -ge 100000) { $clashOk = $true; $clashBytes = $sz }
           }
-          Write-Host "::notice::PROBE clash ok bytes=$clashBytes"
           Write-Host "clash bytes: $clashBytes"
           if (-not $clashOk) {
             $raw = ""
