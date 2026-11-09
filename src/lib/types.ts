@@ -1,0 +1,2 @@
+export type Protocol='vless'|'vmess'|'trojan'|'shadowsocks'|'shadowsocksr'|'snell'|'hysteria'|'hysteria2'|'tuic'|'anytls'|'mieru'|'wireguard'|'socks'|'http'|'naive'|'shadowtls';
+export interface Node {type:Protocol; name:string; server:string; port:number; raw?:string; uuid?:string; username?:string; password?:string; tls?:Record<string,any>; transport?:Record<string,any>; flow?:string; network?:string; alterId?:number; cipher?:string; plugin?:string; pluginOpts?:Record<string,string>; params?:Record<string,string>; protocol?:string; obfs?:string; privateKey?:string}

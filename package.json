@@ -1,0 +1,28 @@
+{
+  "name": "subconverter-with-web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/node.ts",
+    "build": "tsc",
+    "start": "node dist/node.js",
+    "deploy:worker": "wrangler deploy",
+    "deploy:pages": "wrangler pages deploy --cwd pages ../public"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.6",
+    "hono": "^4.7.2",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "@types/node": "^22.13.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.5.0"
+  }
+}

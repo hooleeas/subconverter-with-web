@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+data/*.db
+[[]参考目录]
+**/subconverter-new*
+**/SUB-UI*
