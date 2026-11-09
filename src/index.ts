@@ -4,7 +4,7 @@ import { isSingboxCompatible, singbox } from './lib/singbox.js';
 import { clash, isMihomoCompatible } from './lib/clash.js';
 import type { Node } from './lib/types.js';
 import { BUILTIN_SUBAPI_ID, D1Store, StructuredStore, type Store } from './lib/db.js';
-import { fetchRuleText, loadRules } from './lib/rules.js';
+import { fetchRuleText, loadRules, timeoutSignal } from './lib/rules.js';
 import { isSurgeCompatible, surge } from './lib/surge.js';
 import { isLoonCompatible, loon } from './lib/loon.js';
 import { isQuanxCompatible, quanx } from './lib/quanx.js';
@@ -345,7 +345,7 @@ app.post('/api/convert', async c => {
   }
   const fetched: Array<{ text: string } | { error: string }> = await Promise.all(upstreams.map(async url => {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      const response = await fetch(url, { signal: timeoutSignal(15000) });
       if (!response.ok) return { error: `Upstream ${url.host} returned ${response.status}` };
       return { text: await response.text() };
     } catch { return { error: `Could not fetch upstream: ${url.host}` }; }
@@ -541,7 +541,7 @@ async function backendVersionFor(db: Store, record: any): Promise<string> {
     const backend = (JSON.parse(serialized || '[]') as any[]).find(x => x.id === backendId);
     if (!backend || !backend.apiUrl) return APP_VERSION;
     const base = new URL(backend.apiUrl);
-    const r = await fetch(base.origin + '/version', {signal: AbortSignal.timeout(3000)});
+    const r = await fetch(base.origin + '/version', {signal: timeoutSignal(3000)});
     if (!r.ok) return String(backend.name || APP_VERSION);
     const t = (await r.text()).trim();
     return t || String(backend.name || APP_VERSION);
@@ -579,7 +579,7 @@ async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Respo
     if(format==='surge'){api.searchParams.set('ver','4');api.searchParams.set('new_name','true')}else if(format==='quanx')api.searchParams.set('udp','true');else if(['clash','singbox'].includes(format))api.searchParams.set('new_name','true');
     try{
       const agent=({base64:'v2rayn',clash:'clash',singbox:'singbox',surge:'surge',loon:'Loon',quanx:'Quantumult X'} as Record<string,string>)[format]||format;
-      const response=await fetch(api,{headers:{'user-agent':agent},signal:AbortSignal.timeout(20000)});
+      const response=await fetch(api,{headers:{'user-agent':agent},signal:timeoutSignal(20000)});
       if(!response.ok)return c.json({error:'Conversion backend returned HTTP '+response.status},502);
       return decorate(new Response(await response.text(),{headers:{'content-type':response.headers.get('content-type')||(format==='singbox'?'application/json':'text/plain; charset=utf-8')}}));
     }catch(error){return c.json({error:'Could not reach selected conversion backend: '+(error instanceof Error?error.message:String(error))},502)}

@@ -26,6 +26,17 @@ function resolveRuleUrl(resource: string, templateUrl: string): string {
  return new URL(resource, templateUrl).toString();
 }
 
+/**
+ * AbortSignal.timeout() doesn't exist in some runtimes (EdgeOne edge
+ * isolates). Fall back to an AbortController + setTimeout.
+ */
+export function timeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms);
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch):Promise<string>{
  // local:// rule files ship on disk for Docker/Node (cached at startup) but
  // Workers/Pages/EdgeOne have no filesystem: fetch them from the official
@@ -34,7 +45,7 @@ export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch):Promi
  if(url.startsWith(LOCAL_RULE_PREFIX))fetchUrl='https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/'+url.slice(LOCAL_RULE_PREFIX.length);
  const parsed=new URL(fetchUrl);if(!['http:','https:'].includes(parsed.protocol))throw new Error('Only HTTP(S) rule URLs are allowed');
  let response:Response;
- try{response=await fetcher(fetchUrl,{signal:AbortSignal.timeout(15000)})}
+ try{response=await fetcher(fetchUrl,{signal:timeoutSignal(15000)})}
  catch(error){throw new Error(`Could not fetch rule resource ${parsed.host}: ${errorMessage(error)}`)}
  if(!response.ok)throw new Error(`Could not fetch rule resource ${parsed.host}: HTTP ${response.status}`);
  return response.text();
