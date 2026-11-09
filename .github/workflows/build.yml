@@ -345,6 +345,9 @@ jobs:
             $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
             $sid = ($resp.Content | ConvertFrom-Json).id
             Write-Host "::notice::PROBE subscribe ok sid=$sid attempt=$attempt"
+            $dump = curl.exe -s "http://127.0.0.1:3101/api/admin/data"
+            $found = $dump.Contains($sid)
+            Write-Host "::notice::PROBE store has sid in admin-data: $found"
             $code = curl.exe -s -o "$env:RUNNER_TEMP/clash.yaml" -w "%{http_code}" "http://127.0.0.1:3101/api/$sid?clash"
             $sz = 0
             if (Test-Path "$env:RUNNER_TEMP/clash.yaml") { $sz = (Get-Item "$env:RUNNER_TEMP/clash.yaml").Length }
