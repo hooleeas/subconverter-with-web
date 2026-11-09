@@ -311,48 +311,43 @@ jobs:
           Set-Content -Path stage/README.md -Value '# subconverter-with-web (portable)', 'Run: `run.bat` (or `node.exe dist/node.js`)', 'Env: `PORT` (default 3000), `DB_PATH` (default data/app.db),', '`ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).', 'Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to `node.exe`.'
       - name: Smoke test
         run: |
+          Write-Host "::error::PROBE smoke start"
           New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP/smoke" | Out-Null
           $env:PORT = 3101
           $env:DB_PATH = "$env:RUNNER_TEMP/smoke/app.db"
           $nodeExe = "$env:GITHUB_WORKSPACE/stage/node.exe"
           $stageDir = "$env:GITHUB_WORKSPACE/stage"
-          $p = $null
-          try {
-            if (-not (Test-Path $nodeExe)) { throw "node.exe not found at $nodeExe" }
-            $p = Start-Process -FilePath $nodeExe -ArgumentList "dist/node.js" -WorkingDirectory $stageDir -PassThru -NoNewWindow -RedirectStandardOutput "$env:RUNNER_TEMP/smoke.log" -RedirectStandardError "$env:RUNNER_TEMP/smoke.err"
-            $ok = $false
-            for ($i = 0; $i -lt 60; $i++) {
-              try { $r = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/health -TimeoutSec 2; if ($r.StatusCode -eq 200) { $ok = $true; break } } catch { Start-Sleep 1 }
-            }
-            if (-not $ok) {
-              $raw = ""
-              if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
-              if (-not $raw -and (Test-Path "$env:RUNNER_TEMP/smoke.log")) { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.log") }
-              $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
-              Write-Host "::error::smoke log: $tail"
-              throw "server did not start"
-            }
-            curl.exe -fsS http://127.0.0.1:3101/version
-            $body = '{"sources":["vmess://eyJ2IjoiMiIsInBzIjoidGVzdCIsImFkZCI6IjEuMi4zLjQiLCJwb3J0IjoiNDQzIiwiaWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJhaWQiOiIwIiwic2N5IjoiYXV0byIsIm5ldCI6IndzIiwidHlwZSI6Im5vbmUiLCJob3N0IjoiIiwicGF0aCI6Ii8iLCJ0bHMiOiJ0bHMifQ=="],"rulesUrl":"local://acl4ssr/Clash/config/ACL4SSR.ini","backendId":"builtin","name":"smoke"}'
-            $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
-            $sid = ($resp.Content | ConvertFrom-Json).id
-            $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash"
-            Write-Host "clash bytes: $($clash.RawContentLength)"
-            if ($clash.RawContentLength -lt 100000) {
-              $raw = ""
-              if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
-              $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
-              Write-Host "::error::clash too small, smoke log: $tail"
-              throw "clash output too small"
-            }
-          } catch {
+          Write-Host "node exists: $(Test-Path $nodeExe)"
+          $p = Start-Process -FilePath $nodeExe -ArgumentList "dist/node.js" -WorkingDirectory $stageDir -PassThru -NoNewWindow -RedirectStandardOutput "$env:RUNNER_TEMP/smoke.log" -RedirectStandardError "$env:RUNNER_TEMP/smoke.err"
+          Write-Host "started pid: $($p.Id)"
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            try { $r = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/health -TimeoutSec 2; if ($r.StatusCode -eq 200) { $ok = $true; break } } catch { Start-Sleep 1 }
+          }
+          if (-not $ok) {
             $raw = ""
             if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
             if (-not $raw -and (Test-Path "$env:RUNNER_TEMP/smoke.log")) { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.log") }
             $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
-            Write-Host "::error::smoke failed: $($_.Exception.Message) | log: $tail"
-            throw
-          } finally { if ($p) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } }
+            Write-Host "::error::smoke log: $tail"
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            exit 1
+          }
+          curl.exe -fsS http://127.0.0.1:3101/version
+          $body = '{"sources":["vmess://eyJ2IjoiMiIsInBzIjoidGVzdCIsImFkZCI6IjEuMi4zLjQiLCJwb3J0IjoiNDQzIiwiaWQiOiIxMTExMTExMS0yMjIyLTMzMzMtNDQ0NC01NTU1NTU1NTU1NTUiLCJhaWQiOiIwIiwic2N5IjoiYXV0byIsIm5ldCI6IndzIiwidHlwZSI6Im5vbmUiLCJob3N0IjoiIiwicGF0aCI6Ii8iLCJ0bHMiOiJ0bHMifQ=="],"rulesUrl":"local://acl4ssr/Clash/config/ACL4SSR.ini","backendId":"builtin","name":"smoke"}'
+          $resp = Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:3101/api/subscribe -Method Post -ContentType "application/json" -Body $body
+          $sid = ($resp.Content | ConvertFrom-Json).id
+          $clash = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3101/api/$sid?clash"
+          Write-Host "clash bytes: $($clash.RawContentLength)"
+          if ($clash.RawContentLength -lt 100000) {
+            $raw = ""
+            if (Test-Path "$env:RUNNER_TEMP/smoke.err") { $raw = [IO.File]::ReadAllText("$env:RUNNER_TEMP/smoke.err") }
+            $tail = $raw.Substring([Math]::Max(0, $raw.Length - 1500)) -replace '\s+', ' '
+            Write-Host "::error::clash too small, smoke log: $tail"
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            exit 1
+          }
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
