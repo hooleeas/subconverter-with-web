@@ -44,7 +44,7 @@ app.post('/api/subscribe', async c => {
   if (!db) return c.json({ error: 'Database binding is missing' }, 503);
   const body = await readJson(c);
   if (!body.ok) return c.json({ error: 'Invalid JSON body' }, 400);
-  const input=body.value as any, id=await resolveAggregateId(db,input);
+  const input=body.value as any, id=String(input.path||'').trim()||crypto.randomUUID();
   if(!validAggregatePath(id))return c.json({error:'Link path must use 3-128 letters, numbers, hyphens or underscores'},400);
   if(await db.get('aggregate:'+id)!==null)return c.json({error:'Link path already exists'},409);
   const created=await makeAggregateRecord(db,input,id,'public');
@@ -161,14 +161,14 @@ app.get('/api/admin/links', async c => {
   if (!(await authorized(c))) return c.json({ error: '管理员账号或密码错误，或尚未配置账号密码' }, 401);
   const db=store(c); if(!db)return c.json({error:'Database binding is missing'},503);
   const _now=Date.now();for(const _it of await db.list('aggregate:')){try{const _v=JSON.parse(_it.value);if(_v.expiresAt){const _t=new Date(_v.expiresAt).getTime();if(!isNaN(_t)&&_t<=_now)await db.delete(_it.key)}}catch{}}
-  const links=(await db.list('aggregate:')).flatMap(item=>{try{const value=JSON.parse(item.value),id=value.id||item.key.slice(10),owner=value.owner===true||value.kind==='self',url=publicUrl(c,(owner?'/':'/api/')+id);if(!owner)return [{id,url,kind:'public'}];const safe={...value,id,url,owner:true};delete safe.destroyKeyHash;return [safe]}catch{return[]}});
+  const links=(await db.list('aggregate:')).flatMap(item=>{try{const value=JSON.parse(item.value),id=value.id||item.key.slice(10),owner=value.owner===true||value.kind==='self',url=publicUrl(c,(owner?'/':'/api/')+id);if(!owner)return [{id,url,kind:'public',name:value.name||'',expiresAt:value.expiresAt||''}];const safe={...value,id,url,owner:true};delete safe.destroyKeyHash;return [safe]}catch{return[]}});
   return c.json({links});
 });
 app.post('/api/admin/links', async c => {
   if (!(await authorized(c))) return c.json({ error: '管理员账号或密码错误，或尚未配置账号密码' }, 401);
   const db=store(c); if(!db)return c.json({error:'Database binding is missing'},503);
   const body=await readJson(c); if(!body.ok)return c.json({error:'Invalid JSON body'},400);
-  const input=body.value as any,id=await resolveAggregateId(db,input),kind=input.kind==='self'?'self':'public';
+  const input=body.value as any,id=String(input.path||'').trim()||crypto.randomUUID(),kind=input.kind==='self'?'self':'public';
   if(!validAggregatePath(id))return c.json({error:'Link path must use 3-128 letters, numbers, hyphens or underscores'},400);
   if(await db.get('aggregate:'+id)!==null)return c.json({error:'Link path already exists'},409);
   const created=await makeAggregateRecord(db,input,id,kind);if(!created.ok)return c.json({error:created.error},400);
@@ -471,7 +471,6 @@ async function readJson(c: any): Promise<{ok:true;value:unknown}|{ok:false}> { t
 function publicUrl(c:any,path:string):string{const u=new URL(c.req.url);const proto=(c.req.header('x-forwarded-proto')||'').split(',')[0].trim()||u.protocol.replace(':','');const p=path.startsWith('/')?path:'/'+path;return proto+'://'+u.host+p}
 function aggregatePath(record:any,id:string):string{return (record.owner===true||record.kind==='self'?'/':'/api/')+id}
 function validAggregatePath(path:string):boolean{return path.length>=3&&path.length<=128&&/^[-A-Za-z0-9_]+$/.test(path)&&!['admin','api','subscribe','subscriptions','public','rules','health','convert','config'].includes(path.toLowerCase())}
-async function resolveAggregateId(db:Store,input:any):Promise<string>{const path=String(input.path||'').trim();if(path)return path;const name=String(input.name||'').trim();if(name&&validAggregatePath(name)&&await db.get('aggregate:'+name)===null)return name;return crypto.randomUUID()}
 function constantTimeEqual(a:string,b:string):boolean{if(a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0}
 async function makeAggregateRecord(db:Store,input:any,id:string,kind:'public'|'self',previous?:any):Promise<{ok:true;value:any}|{ok:false;error:string}>{
   const groupsParsed=await parseAggregateGroups(db,input.groups??previous?.groups);if(!groupsParsed.ok)return groupsParsed;
@@ -556,7 +555,7 @@ async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Respo
   const format=requested||detectSubscriptionFormat(c.req.header('user-agent')||'')||'base64';
   const decorate=(response:Response)=>{
     const headers=new Headers(response.headers);headers.set('cache-control','no-store');
-    const _dn=String(record.name||'').trim()||id;
+    const _fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});const _pt=Object.fromEntries(_fmt.formatToParts(new Date()).map(p=>[p.type,p.value]));const _today=_pt.year+'-'+_pt.month+'-'+_pt.day+'-'+_pt.hour+_pt.minute;const _dn=String(record.name||'').trim()||('sub-'+_today);
     const _ext=({clash:'.yaml',singbox:'.json',surge:'.conf',quanx:'.conf',loon:'.conf',base64:'.txt'} as Record<string,string>)[format]||'.txt';
     const _safe=_dn.replace(/["\\\r\n]/g,'').slice(0,80)||id;
     const _fn=_safe+_ext;
