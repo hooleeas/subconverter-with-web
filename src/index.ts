@@ -149,7 +149,7 @@ app.post('/api/admin/data/import', async c => {
   const data=(body.value as any)?.data;if(!data||!Array.isArray(data.site)||!Array.isArray(data.subs)||!Array.isArray(data.subapis)||!Array.isArray(data.subconfigs))return c.json({error:'备份文件格式无效，须包含 site、subs、subapis 和 subconfigs 数组'},400);
   if(data.site.length>1000||(Array.isArray(data.groups)&&data.groups.length>1000)||data.subs.length>10000||data.subapis.length>1000||data.subconfigs.length>1000)return c.json({error:'备份数据数量超出限制'},400);
   for(const [name,rows] of Object.entries(data) as Array<[string,any[]]>){for(const row of rows){if(!row||typeof row!=='object'||JSON.stringify(row).length>1000000)return c.json({error:`${name} 中包含无效记录`},400)}}
-  if(data.subs.some((item:any)=>typeof item.url!=='string'||!validAggregatePath(item.url)||typeof item.owner!=='boolean'||typeof item.subapi!=='string'||typeof item.subconfig!=='string'||typeof item.block!=='string'||(item.groups!==undefined&&(!Array.isArray(item.groups)||item.groups.some((g:any)=>typeof g!=='string')))))return c.json({error:'subs 数据格式无效'},400);
+  if(data.subs.some((item:any)=>typeof (item.id??item.url)!=='string'||!validAggregatePath(item.id??item.url)||typeof item.owner!=='boolean'||typeof item.subapi!=='string'||typeof item.subconfig!=='string'||typeof item.block!=='string'||(item.groups!==undefined&&(!Array.isArray(item.groups)||item.groups.some((g:any)=>typeof g!=='string')))))return c.json({error:'subs 数据格式无效'},400);
   if(data.groups!==undefined&&(!Array.isArray(data.groups)||data.groups.some((item:any)=>typeof item.id!=='string'||typeof item.name!=='string'||!Array.isArray(item.sources)||item.sources.some((s:any)=>typeof s!=='string'))))return c.json({error:'groups 数据格式无效'},400);
   if(data.subapis.some((item:any)=>typeof item.id!=='string'||typeof item.name!=='string'||typeof item.url!=='string'||typeof item.enable!=='boolean')||!data.subapis.some((item:any)=>item.id===BUILTIN_SUBAPI_ID&&item.url==='builtin://'))return c.json({error:'subapis 数据格式无效或缺少内置转换器'},400);
   if(data.subconfigs.some((item:any)=>typeof item.id!=='string'||typeof item.name!=='string'||typeof item.url!=='string'||typeof item.enable!=='boolean')||!localSubconfigs.every(preset=>data.subconfigs.some((item:any)=>item.id===preset.id&&item.url===preset.url)))return c.json({error:'subconfigs 数据格式无效或缺少内置配置'},400);
@@ -185,7 +185,7 @@ app.put('/api/admin/links/order', async c => {
   const ids=input.order.map((x:any)=>String(x||'')).filter(Boolean);
   let subs:any[]=[];try{subs=JSON.parse((await db.get('subs'))||'[]')}catch{}
   if(!Array.isArray(subs))subs=[];
-  const byId=new Map(subs.map((r:any)=>[String(r.url||r.id||''),r]));
+  const byId=new Map(subs.map((r:any)=>[String(r.id||r.url||''),r]));
   const ordered=ids.map((id:string)=>byId.get(id)).filter(Boolean);
   if(ordered.length!==subs.length)return c.json({error:'订阅列表不完整'},400);
   await db.put('subs',JSON.stringify(ordered));
@@ -554,7 +554,13 @@ async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Respo
   if(!requested&&(c.req.header('accept')||'').includes('text/html')){c.header('Cache-Control','private, max-age=3600, immutable');const bv=await backendVersionFor(db,record);let _si='/favicon.webp';try{_si=String(await db.get('config:siteIcon')||'/favicon.webp').trim()||'/favicon.webp'}catch{}return c.html(subscriptionPortal(publicUrl(c,aggregatePath(record,id)),id,record,c.req.header('user-agent')||'',bv,_si));}
   const format=requested||detectSubscriptionFormat(c.req.header('user-agent')||'')||'base64';
   const decorate=(response:Response)=>{
-    const headers=new Headers(response.headers);headers.set('cache-control','no-store');headers.set('content-disposition','inline');
+    const headers=new Headers(response.headers);headers.set('cache-control','no-store');
+    const _dn=String(record.name||'').trim()||id;
+    const _ext=({clash:'.yaml',singbox:'.json',surge:'.conf',quanx:'.conf',loon:'.conf',base64:'.txt'} as Record<string,string>)[format]||'.txt';
+    const _safe=_dn.replace(/["\\\r\n]/g,'').slice(0,80)||id;
+    const _fn=_safe+_ext;
+    headers.set('content-disposition',`attachment; filename="${_fn}"; filename*=UTF-8''${encodeURIComponent(_fn)}`);
+    headers.set('profile-title',_dn);
     headers.set('profile-web-page-url',publicUrl(c,aggregatePath(record,id)));
     return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
   };
