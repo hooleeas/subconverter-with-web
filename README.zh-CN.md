@@ -17,14 +17,13 @@ flowchart TB
     A --- DB[(存储)]
 ```
 
-一套代码，三种部署，同一个存储接口（`Store`）：
+一套代码，两种部署，同一个存储接口（`Store`）：
 
 ```mermaid
 flowchart LR
     subgraph 部署方式
         D[Docker] --> SQLite[(SQLite 文件)]
         P[Cloudflare Pages] --> D1
-        E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
 ```
 
@@ -32,9 +31,10 @@ flowchart LR
 |---|---|---|
 | Docker | SQLite 文件（`/app/data/app.db`） | `src/node.ts` |
 | Cloudflare Pages | D1（`subconverter`） | `pages/functions/[[path]].ts` |
-| EdgeOne Makers | Blob 存储（`subconverter`） | `cloud-functions/[[default]].ts` |
 
-> 存储表第一次读写时自动建好（`CREATE TABLE IF NOT EXISTS kv`）。EdgeOne 的 Blob 没有过期功能，过期时间存在每条数据里面。
+> 存储表第一次读写时自动建好（`CREATE TABLE IF NOT EXISTS kv`）。
+
+> EdgeOne Pages **不支持**：它的无服务函数跑不稳转换——Clash 输出会时不时报 HTTP 545（"Error return from script"），规则文件内联、上游缓存都修不好。请用 Docker 或 Cloudflare Pages。
 
 ---
 
@@ -133,16 +133,6 @@ rm -rf /opt/subconverter-with-web
 4. **部署。**保存后 Cloudflare 就开始部署，网站在 `https://<项目名>.pages.dev`，以后推送代码会自动部署。
 
 打开就能用——一开始没设管理员密码，`/admin` 直接进。想锁上时去**站点设置**里设密码。
-
-### EdgeOne Makers
-
-需要一个 EdgeOne 账号（腾讯云），全程在 [EdgeOne 控制台](https://edgeone.ai)里点鼠标，不用命令行。
-
-1. 控制台里进 **Makers**，点 **Create project → Import Git repository**。
-2. 连接 GitHub，选这个仓库。构建配置是自动识别的（Hono）：构建命令 `npm run build`、输出目录 `public`、生产分支 `main`，确认后点 **Start deployment**。
-3. 部署完控制台会给你一个网址（长这样 `https://<项目名>-<部署ID>.edgeone.dev`）。打开就能用——一开始没设管理员密码，`/admin` 直接进。
-
-打开网站后，去**站点设置**里设默认的 SUBAPI 和 SUBCONFIG，不然首页点生成会提示管理员还没配置默认值；想锁上管理面板时也在那里设密码。
 
 ---
 

@@ -1,8 +1,8 @@
 // Generate src/lib/rules-data.ts: the bundled ACL4SSR rule files inlined
 // as a string map, so the edge function reads rules from memory instead
-// of fetching them (GitHub is slow, the BlobStore is slow, and the
-// ASSETS binding is unreliable on EdgeOne — all of which get the
-// function killed with HTTP 545).
+// of fetching them (GitHub is slow, and the ASSETS binding is not
+// always reliable — both of which can get the function killed with
+// HTTP 545).
 //
 // Only the files for the templates listed in TEMPLATES are inlined:
 // inlining all 76 files (3.7MB) bloated the function bundle and made

@@ -37,7 +37,7 @@ function resolveRuleUrl(resource: string, templateUrl: string): string {
 }
 
 /**
- * AbortSignal.timeout() doesn't exist in some runtimes (EdgeOne edge
+ * AbortSignal.timeout() doesn't exist in some runtimes (some edge
  * isolates). Fall back to an AbortController + setTimeout.
  */
 export function timeoutSignal(ms: number): AbortSignal {
@@ -50,7 +50,7 @@ export function timeoutSignal(ms: number): AbortSignal {
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string):Promise<string>{
  // Bundled rule files are inlined in the function bundle (RULE_FILES).
  // Read from memory first: no fetch at all, so the edge function cannot
- // be killed by a slow GitHub/Blob/ASSETS read (HTTP 545). Fall back to
+ // be killed by a slow GitHub/ASSETS read (HTTP 545). Fall back to
  // a plain same-origin fetch, then ASSETS, then GitHub for files that
  // were not bundled (e.g. a template added without rebuilding).
  if(url.startsWith(LOCAL_RULE_PREFIX)){
@@ -82,10 +82,9 @@ export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets
 
 function errorMessage(error:unknown):string{return error instanceof Error?error.message:String(error)}
 async function cachedText(store:Store|null,url:string,fetcher:typeof fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string){
- // Bundled rules are read from ASSETS (fast, local) on edge runtimes, so
- // skip the BlobStore cache for local:// files entirely: one Blob get
- // already takes 0.8-3.5s, and 16 of them (1 sequential + 15 parallel)
- // exceed the platform's kill threshold even on a cache hit. The store
- // cache is only for the GitHub path (no ASSETS binding, e.g. Node).
+ // Bundled rules are read from memory (RULE_FILES) on edge runtimes, so
+ // skip the store cache for local:// files entirely: the inlined read
+ // is already instant. The store cache is only for the GitHub path
+ // (no ASSETS binding, e.g. Node).
  if(url.startsWith(LOCAL_RULE_PREFIX)&&assets)return fetchRuleText(url,fetcher,assets,assetBase);
  const key=`cache:${url}`;const cached=await store?.get(key);if(cached!==null&&cached!==undefined)return cached;const body=await fetchRuleText(url,fetcher,assets,assetBase);await store?.put(key,body,Date.now()+3600000);return body;}

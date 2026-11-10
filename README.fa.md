@@ -19,14 +19,13 @@ flowchart TB
     A --- DB[(ذخیره‌سازی)]
 ```
 
-یک کد، سه استقرار، یک رابط ذخیره‌سازی (`Store`):
+یک کد، دو استقرار، یک رابط ذخیره‌سازی (`Store`):
 
 ```mermaid
 flowchart LR
     subgraph استقرارها
         D[Docker] --> SQLite[(فایل SQLite)]
         P[Cloudflare Pages] --> D1
-        E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
 ```
 
@@ -34,9 +33,10 @@ flowchart LR
 |---|---|---|
 | Docker | فایل SQLite (`/app/data/app.db`) | `src/node.ts` |
 | Cloudflare Pages | D1 (`subconverter`) | `pages/functions/[[path]].ts` |
-| EdgeOne Makers | Blob (`subconverter`) | `cloud-functions/[[default]].ts` |
 
-> جدول ذخیره‌سازی در اولین دسترسی ساخته می‌شود (`CREATE TABLE IF NOT EXISTS kv`). در EdgeOne، Blob انقضا ندارد، پس زمان انقضا داخل هر مقدار ذخیره می‌شود.
+> جدول ذخیره‌سازی در اولین دسترسی ساخته می‌شود (`CREATE TABLE IF NOT EXISTS kv`).
+
+> EdgeOne Pages **پشتیبانی نمی‌شود**: تابع بدون سرور آن نمی‌تواند تبدیل را به‌طور قابل اعتماد اجرا کند — خروجی Clash گاهی با خطای HTTP 545 ("Error return from script") شکست می‌خورد، حتی بعد از این‌که فایل‌های قوانین در بسته گنجانده و کش بالادستی اضافه شد. به‌جای آن از Docker یا Cloudflare Pages استفاده کنید.
 
 ---
 
@@ -135,16 +135,6 @@ rm -rf /opt/subconverter-with-web
 4. **استقرار.** ذخیره کنید و Cloudflare استقرار را شروع می‌کند. سایت شما در `https://<project-name>.pages.dev` بالا می‌آید و پوش‌های بعدی خودکار مستقر می‌شوند.
 
 آن را باز کنید و شروع به تبدیل کنید — در ابتدا رمزی برای مدیریت تعیین نشده، پس `/admin` مستقیم باز می‌شود. هر وقت خواستید قفلش کنید، از **تنظیمات سایت** رمز بگذارید.
-
-### EdgeOne Makers
-
-به یک حساب EdgeOne (Tencent Cloud) نیاز دارید. همه‌کار در [کنسول EdgeOne](https://edgeone.ai) انجام می‌شود — بدون خط فرمان.
-
-1. در کنسول، زبانه **Makers** را باز کنید و روی **Create project → Import Git repository** کلیک کنید.
-2. GitHub را وصل کنید و این مخزن را انتخاب کنید. تنظیمات ساخت خودکار شناسایی می‌شوند (Hono): دستور ساخت `npm run build`، پوشه خروجی `public`، شاخه تولید `main`. تأیید کنید و روی **Start deployment** کلیک کنید.
-3. وقتی استقرار تمام شد، کنسول نشانی سایت را به شما نشان می‌دهد (به این شکل: `https://<project-name>-<deployment-id>.edgeone.dev`). آن را باز کنید و شروع به تبدیل کنید — در ابتدا رمزی برای مدیریت تعیین نشده، پس `/admin` مستقیم باز می‌شود.
-
-بعد از باز کردن سایت، در **تنظیمات سایت**، SUBAPI و SUBCONFIG پیش‌فرض را بگذارید — تا وقتی این‌ها خالی‌اند، دکمه تولید در صفحه اصلی می‌گوید مدیر پیش‌فرض‌ها را تنظیم نکرده است. هر وقت خواستید پنل مدیریت را قفل کنید، همان‌جا رمز بگذارید.
 
 ---
 

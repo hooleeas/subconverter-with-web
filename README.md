@@ -17,14 +17,13 @@ flowchart TB
     A --- DB[(Storage)]
 ```
 
-One codebase, three deployments, one storage interface (`Store`):
+One codebase, two deployments, one storage interface (`Store`):
 
 ```mermaid
 flowchart LR
     subgraph Deployments
         D[Docker] --> SQLite[(SQLite file)]
         P[Cloudflare Pages] --> D1
-        E[EdgeOne Makers] --> B[(EdgeOne Blob)]
     end
 ```
 
@@ -32,9 +31,10 @@ flowchart LR
 |---|---|---|
 | Docker | SQLite file (`/app/data/app.db`) | `src/node.ts` |
 | Cloudflare Pages | D1 (`subconverter`) | `pages/functions/[[path]].ts` |
-| EdgeOne Makers | Blob store (`subconverter`) | `cloud-functions/[[default]].ts` |
 
-> The storage table is auto-created on first use (`CREATE TABLE IF NOT EXISTS kv`). On EdgeOne, Blob has no TTL, so expiry is stored inside each value.
+> The storage table is auto-created on first use (`CREATE TABLE IF NOT EXISTS kv`).
+
+> EdgeOne Pages is **not supported**: its serverless function cannot reliably run the conversion — Clash output intermittently fails with HTTP 545 ("Error return from script") even after the rule files were inlined and the upstream fetch cached. Use Docker or Cloudflare Pages instead.
 
 ---
 
@@ -133,16 +133,6 @@ You need a Cloudflare account. No command line needed — everything is done in 
 4. **Deploy.** Save and Cloudflare starts the first deployment. Your site will be live at `https://<project-name>.pages.dev`, and later pushes deploy automatically.
 
 Open it and start converting — no admin password is set at first, so `/admin` opens directly. Set one in **Site settings** when you want to lock it.
-
-### EdgeOne Makers
-
-You need an EdgeOne account (Tencent Cloud). No command line needed — everything is done in the [EdgeOne console](https://edgeone.ai).
-
-1. In the console, open the **Makers** tab and click **Create project → Import Git repository**.
-2. Connect GitHub and select this repo. The build settings are auto-detected (Hono): build command `npm run build`, output directory `public`, production branch `main`. Confirm them and click **Start deployment**.
-3. When the deployment finishes, the console shows you the site URL (it looks like `https://<project-name>-<deployment-id>.edgeone.dev`). Open it and start converting — no admin password is set at first, so `/admin` opens directly.
-
-After opening the site, set the default SUBAPI and SUBCONFIG in **Site settings** — until then the homepage will say the admin hasn't configured defaults. Set an admin password there too when you want to lock it.
 
 ---
 

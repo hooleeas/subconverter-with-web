@@ -13,7 +13,6 @@
     "deploy:pages": "wrangler pages deploy --cwd pages ../public"
   },
   "dependencies": {
-    "@edgeone/pages-blob": "^0.0.19",
     "@hono/node-server": "^2.1.6",
     "hono": "^4.7.2",
     "yaml": "^2.7.0"
