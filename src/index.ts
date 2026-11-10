@@ -95,7 +95,7 @@ app.get('/api/public/options', async c => {
   const homeTitle=normHomeTitle(await db.get('config:homeTitle'));
   let siteIcon='/favicon.webp';try{siteIcon=String(await db.get('config:siteIcon')||'/favicon.webp').trim()||'/favicon.webp'}catch{}
   return c.json({
-    backends:[{id:BUILTIN_SUBAPI_ID,name:'内置转换器',url:'builtin://'},...backends.filter(item=>item&&item.id&&item.name&&item.apiUrl&&item.enable!==false).map(({id,name,apiUrl})=>({id,name,url:apiUrl}))],
+    backends:[{id:BUILTIN_SUBAPI_ID,name:'内置转换器',url:'builtin://'},...backends.filter(item=>item&&item.id&&item.id!==BUILTIN_SUBAPI_ID&&item.name&&item.apiUrl&&item.enable!==false).map(({id,name,apiUrl})=>({id,name,url:apiUrl}))],
     subconfigs:mergeSubconfigs(localSubconfigs,subconfigs).filter(item=>item&&item.id&&item.name&&(item as any).enable!==false&&(isHttpUrl(String(item.url))||isLocalSubconfigUrl(item.url))).map(({id,name,url})=>({id,name,url})),
     defaultBackendId,defaultSubconfigId,homeTitle,siteIcon
   });
