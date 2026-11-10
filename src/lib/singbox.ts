@@ -161,35 +161,27 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
     log: { level: 'warn' },
     dns: {
       servers: [
-        { type: 'https', tag: 'dns_cn', server: '223.5.5.5', server_port: 443, path: '/dns-query', tls: { enabled: true, server_name: 'dns.alidns.com' } },
-        { type: 'https', tag: 'dns_global', server: '1.1.1.1', server_port: 443, path: '/dns-query', tls: { enabled: true, server_name: 'cloudflare-dns.com' }, detour: final },
-        { type: 'fakeip', tag: 'dns_fakeip', inet4_range: '198.18.0.0/15' },
-        { type: 'udp', tag: 'dns_resolver', server: '223.5.5.5' },
+        { tag: 'dns_cn', address: 'https://223.5.5.5/dns-query', address_resolver: 'dns_resolver', detour: 'direct' },
+        { tag: 'dns_global', address: 'https://1.1.1.1/dns-query', address_resolver: 'dns_resolver', detour: final },
+        { tag: 'dns_resolver', address: '223.5.5.5', detour: 'direct' },
       ],
       rules: [],
       final: 'dns_global',
       strategy: 'prefer_ipv4',
       reverse_mapping: true,
+      fakeip: { enabled: true, inet4_range: '198.18.0.0/15' },
     },
     inbounds: [
       { type: 'mixed', tag: 'mixed-in', listen: '0.0.0.0', listen_port: 2080 },
-      { type: 'tun', tag: 'tun-in', address: ['172.19.0.1/30'], auto_route: true, strict_route: true, dns_mode: 'hijack', stack: 'mixed' },
+      { type: 'tun', tag: 'tun-in', address: ['172.19.0.1/30'], auto_route: true, strict_route: true, stack: 'mixed' },
     ],
     ...(wireguardNodes.length ? { endpoints: wireguardNodes.map(wireguardEndpoint) } : {}),
     outbounds,
-    // sing-box 1.14 deprecates the implicit default HTTP client for
-    // remote rule-sets (removed in 1.16.0): define an explicit
-    // client detouring through the proxy, and select it below.
-    // Do NOT use download_detour on the rule-sets: it is deprecated
-    // in 1.14.0 as well.
-    ...(geoipTags.length ? { http_clients: [{ tag: 'rule-set-http', detour: final }] } : {}),
     route: {
       auto_detect_interface: true,
-      default_domain_resolver: 'dns_resolver',
       rules,
       ...(geoipTags.length ? { rule_set: geoipTags.map(tag => ({ type: 'remote', tag, format: 'binary', url: `${ruleSetBase || 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set'}/${tag}.srs`, update_interval: '1d' })) } : {}),
       final: routeFinal,
-      ...(geoipTags.length ? { default_http_client: 'rule-set-http' } : {}),
     },
     ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m' },
     experimental: {
