@@ -191,7 +191,7 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
       final: routeFinal,
       ...(geoipTags.length ? { default_http_client: 'rule-set-http' } : {}),
     },
-    ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m', detour: 'direct' },
+    ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m' },
     experimental: {
       cache_file: { enabled: true, store_fakeip: true },
       clash_api: { external_controller: '127.0.0.1:9090', external_ui: 'dashboard' },
