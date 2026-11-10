@@ -8,10 +8,14 @@ export async function loadRules(store:Store|null, templateUrl:string|undefined, 
   if(s.startsWith('ruleset=')){const v=s.slice(8),comma=v.indexOf(',');if(comma<0)continue;const group=v.slice(0,comma).trim(),resource=v.slice(comma+1).trim();const url=resource.startsWith('[]')?resource:resource.replace(/,\s*\d+\s*$/,'');entries.push({group,url});}
   if(s.startsWith('custom_proxy_group=')){const parts=s.slice(19).split('`').map(x=>x.trim());const name=parts.shift();const rawType=parts.shift()||'select';if(name){const type=rawType==='url-test'?'url-test':rawType==='fallback'?'fallback':rawType==='load-balance'?'load-balance':'select';const optionIndex=parts.findIndex(x=>/^https?:\/\//i.test(x));const optionParts=optionIndex<0?[]:parts.slice(optionIndex);const option=optionParts.length?optionParts.join(','):undefined;const params=option?.split(',')||[];const proxyParts=optionIndex<0?parts:parts.slice(0,optionIndex);const proxies=proxyParts.filter(Boolean).map(x=>x.startsWith('[]')?x.slice(2):x);groups.push({name,type,proxies,...(option?{url:params[0],interval:Number(params[1])||300,tolerance:Number(params[3])||50}:{})});}}
  }
- const ruleLists=await Promise.all(entries.map(async entry=>{
+ const loadOne=async (entry:{group:string,url:string}):Promise<string[]>=>{
   if(entry.url.startsWith('[]')){const directive=entry.url.slice(2).trim();if(/^FINAL$/i.test(directive)||/^MATCH$/i.test(directive))return [`MATCH,${entry.group}`];const comma=directive.indexOf(',');const type=comma<0?directive:directive.slice(0,comma);const value=comma<0?'':directive.slice(comma+1);return type?[`${type}${value?`,${value}`:''},${entry.group}`]:[];}
   const url=resolveRuleUrl(entry.url,templateUrl);const contents=await cachedText(store,url,fetcher,assets,assetBase);const rules:string[]=[];for(const raw of contents.split(/\r?\n/)){const line=raw.trim();if(!line||line.startsWith('#')||line.startsWith(';'))continue;const parts=line.split(',').map(value=>value.trim());let rule:string;if(parts.length===1){const value=parts[0]!;rule=/^\d{1,3}(?:\.\d{1,3}){3}(?:\/\d+)?$/.test(value)?`IP-CIDR,${value},${entry.group},no-resolve`:`DOMAIN-SUFFIX,${value},${entry.group}`;}else{const flags=parts.slice(2).filter(value=>/^(?:no-resolve|no-resolve-via-proxy)$/i.test(value));const match=parts.slice(0,2).join(',');rule=`${match},${entry.group}${flags.length?`,${flags.join(',')}`:''}`;}rules.push(rule);}return rules;
- }));
+ };
+ // Fetch rule lists in small batches: firing all 15 ASSETS subrequests
+ // at once intermittently kills the edge function (HTTP 545), so cap
+ // concurrency at 5.
+ const ruleLists:string[][]=[];for(let i=0;i<entries.length;i+=5){ruleLists.push(...await Promise.all(entries.slice(i,i+5).map(loadOne)));}
  const rules=ruleLists.flat();
  if(!groups.length)groups.push({name:'PROXY',type:'select',proxies:[]});if(!rules.some(rule=>/^(?:MATCH|FINAL),/i.test(rule)))rules.push(`MATCH,${groups.find(g=>/节点选择|proxy/i.test(g.name))?.name||groups[0].name}`);return{groups,rules};
 }
