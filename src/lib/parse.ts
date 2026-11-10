@@ -1,4 +1,5 @@
 import type { Node, Protocol } from './types.js';
+import { withFlagEmoji } from './emoji.js';
 
 const supported = new Set<Protocol>([
   'vless', 'vmess', 'trojan', 'shadowsocks', 'shadowsocksr', 'snell',
@@ -282,10 +283,35 @@ export function parseNodes(text: string): Node[] {
   const uniqueNodes = [...new Map(nodes.map(node => [node.raw || `${node.type}|${node.server}|${node.port}|${node.name}`, node])).values()];
   const names = new Map<string, number>();
   for (const node of uniqueNodes) {
+    node.name = withFlagEmoji(node.name, node.server);
     const original = node.name;
     const next = (names.get(original) || 0) + 1;
     names.set(original, next);
     if (next > 1) node.name = `${original} (${next})`;
   }
   return uniqueNodes;
+}
+
+/** 重建节点链接并写入当前名称（含国旗），供 base64 输出使用。 */
+export function linkWithName(node: Node): string {
+  const raw = node.raw || '';
+  const name = node.name;
+  if (!raw) return `${node.type}://${node.server}:${node.port}#${encodeURIComponent(name)}`;
+  // vmess：名称在 base64 JSON 的 ps 字段里，改 ps 后重新编码。
+  if (node.type === 'vmess') {
+    try {
+      const body = raw.slice(raw.indexOf('://') + 3);
+      const hashIdx = body.indexOf('#');
+      const encoded = hashIdx >= 0 ? body.slice(0, hashIdx) : body;
+      const fragment = hashIdx >= 0 ? body.slice(hashIdx) : '';
+      const payload = JSON.parse(decode64(encoded)) as Record<string, unknown>;
+      payload.ps = name;
+      const reencoded = Buffer.from(JSON.stringify(payload), 'utf-8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return `vmess://${reencoded}${fragment}`;
+    } catch { return raw; }
+  }
+  // 其余协议：名称在 URL #fragment 里，直接替换。
+  const hashIdx = raw.indexOf('#');
+  const base = hashIdx >= 0 ? raw.slice(0, hashIdx) : raw;
+  return `${base}#${encodeURIComponent(name)}`;
 }

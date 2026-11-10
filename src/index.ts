@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { parseNodes } from './lib/parse.js';
+import { linkWithName, parseNodes } from './lib/parse.js';
 import { isSingboxCompatible, singbox } from './lib/singbox.js';
 import { clash, isMihomoCompatible } from './lib/clash.js';
 import type { Node } from './lib/types.js';
@@ -388,7 +388,7 @@ app.post('/api/convert', async c => {
   const format = (body.format || 'singbox').toLowerCase();
   try {
   if (format === 'clash') { if(!nodes.some(isMihomoCompatible))return c.json({error:'No nodes supported by Mihomo/Clash Meta for this input'},400);let rules; try { rules=await loadRules(db, body.rulesUrl, undefined, assets, assetBase); } catch(e) { return c.json({error:e instanceof Error?e.message:'Could not load rules'},502); } return c.text(clash(nodes,rules), 200, { 'content-type': 'text/plain; charset=utf-8' }); }
-  if (format === 'base64' || format === 'v2rayn') return c.text(encodeBase64(nodes.map(n => n.raw || `${n.type}://${n.server}:${n.port}#${encodeURIComponent(n.name)}`).join('\n')), 200, { 'content-type': 'text/plain; charset=utf-8' });
+  if (format === 'base64' || format === 'v2rayn') return c.text(encodeBase64(nodes.map(n => linkWithName(n)).join('\n')), 200, { 'content-type': 'text/plain; charset=utf-8' });
   if (format === 'singbox' || format === 'sing-box') {
     if (!nodes.some(isSingboxCompatible)) return c.json({ error: 'No input nodes are compatible with the current sing-box outbound schema (currently unsupported: XHTTP, VLESS encryption, SSR, Mieru, TUIC v4, Snell v3)' }, 400);
     let rules;
