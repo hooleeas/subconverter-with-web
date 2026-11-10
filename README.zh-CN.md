@@ -103,6 +103,24 @@ services:
 
 镜像平台：`linux/amd64`、`linux/arm64`、`linux/arm/v7`。
 
+卸载（用 `docker run` 安装的）：
+
+```sh
+docker stop subconverter-web && docker rm subconverter-web
+docker rmi hooleeas/subconverter-with-web:latest
+# 可选：删除全部数据（订阅、设置），删了找不回来
+rm -rf /opt/subconverter-with-web/data
+```
+
+卸载（用 Compose 安装的）：
+
+```sh
+docker compose down
+docker rmi hooleeas/subconverter-with-web:latest
+# 可选：删除全部数据，删了找不回来
+rm -rf ./data
+```
+
 ### Cloudflare Pages
 
 需要一个 Cloudflare 账号，全程在[Cloudflare 控制台](https://dash.cloudflare.com)里点鼠标，不用命令行。

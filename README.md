@@ -103,6 +103,24 @@ services:
 
 Image platforms: `linux/amd64`, `linux/arm64`, `linux/arm/v7`.
 
+To uninstall (installed with `docker run`):
+
+```sh
+docker stop subconverter-web && docker rm subconverter-web
+docker rmi hooleeas/subconverter-with-web:latest
+# Optional: delete all data (subscriptions, settings) — cannot be undone
+rm -rf /opt/subconverter-with-web/data
+```
+
+To uninstall (installed with Compose):
+
+```sh
+docker compose down
+docker rmi hooleeas/subconverter-with-web:latest
+# Optional: delete all data — cannot be undone
+rm -rf ./data
+```
+
 ### Cloudflare Pages
 
 You need a Cloudflare account. No command line needed — everything is done in the [Cloudflare dashboard](https://dash.cloudflare.com).

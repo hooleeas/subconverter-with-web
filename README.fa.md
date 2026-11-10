@@ -105,6 +105,24 @@ services:
 
 پلتفرم‌های ایمیج: `linux/amd64`، `linux/arm64`، `linux/arm/v7`.
 
+برای حذف نصب (نصب‌شده با `docker run`):
+
+```sh
+docker stop subconverter-web && docker rm subconverter-web
+docker rmi hooleeas/subconverter-with-web:latest
+# اختیاری: حذف همه داده‌ها (اشتراک‌ها، تنظیمات) — قابل بازگشت نیست
+rm -rf /opt/subconverter-with-web/data
+```
+
+برای حذف نصب (نصب‌شده با Compose):
+
+```sh
+docker compose down
+docker rmi hooleeas/subconverter-with-web:latest
+# اختیاری: حذف همه داده‌ها — قابل بازگشت نیست
+rm -rf ./data
+```
+
 ### Cloudflare Pages
 
 به یک حساب Cloudflare نیاز دارید. همه‌کار در [داشبورد Cloudflare](https://dash.cloudflare.com) انجام می‌شود — بدون خط فرمان.
