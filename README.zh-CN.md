@@ -118,20 +118,13 @@ services:
 
 ### EdgeOne Makers
 
-需要一个 EdgeOne 账号（腾讯云）和 Node.js 22+。存储不用配置，第一次用时自动建好。
+需要一个 EdgeOne 账号（腾讯云），全程在 [EdgeOne 控制台](https://edgeone.ai)里点鼠标，不用命令行。
 
-```sh
-# 1. 装 CLI（一次就行），登录（会打开浏览器授权）
-npm i -g edgeone
-edgeone login
+1. 控制台里进 **Makers**，点 **Create project → Import Git repository**。
+2. 连接 GitHub，选这个仓库。构建配置是自动识别的（Hono）：构建命令 `npm run build`、输出目录 `public`、生产分支 `main`，确认后点 **Start deployment**。
+3. 部署完控制台会给你一个网址（长这样 `https://<项目名>-<部署ID>.edgeone.dev`）。打开就能用——一开始没设管理员密码，`/admin` 直接进。
 
-# 2. 在项目根目录部署
-edgeone makers deploy -n subconverter-with-web
-```
-
-部署完网站在 `https://subconverter-with-web.edgeone.cool`。打开就能用——一开始没设管理员密码，`/admin` 直接进。想锁上时去**站点设置**里设密码。
-
-先登录再部署——匿名部署建的是临时项目，数据留不住。
+打开网站后，去**站点设置**里设默认的 SUBAPI 和 SUBCONFIG，不然首页点生成会提示管理员还没配置默认值；想锁上管理面板时也在那里设密码。
 
 ---
 

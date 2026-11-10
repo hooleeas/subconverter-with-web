@@ -118,20 +118,13 @@ Open it and start converting — no admin password is set at first, so `/admin` 
 
 ### EdgeOne Makers
 
-You need an EdgeOne account (Tencent Cloud) and Node.js 22+. Storage needs no setup — it is created automatically on first use.
+You need an EdgeOne account (Tencent Cloud). No command line needed — everything is done in the [EdgeOne console](https://edgeone.ai).
 
-```sh
-# 1. Install the CLI (once) and log in (opens a browser to authorize)
-npm i -g edgeone
-edgeone login
+1. In the console, open the **Makers** tab and click **Create project → Import Git repository**.
+2. Connect GitHub and select this repo. The build settings are auto-detected (Hono): build command `npm run build`, output directory `public`, production branch `main`. Confirm them and click **Start deployment**.
+3. When the deployment finishes, the console shows you the site URL (it looks like `https://<project-name>-<deployment-id>.edgeone.dev`). Open it and start converting — no admin password is set at first, so `/admin` opens directly.
 
-# 2. Deploy from the project root
-edgeone makers deploy -n subconverter-with-web
-```
-
-Your site will be live at `https://subconverter-with-web.edgeone.cool`. Open it and start converting — no admin password is set at first, so `/admin` opens directly. Set one in **Site settings** when you want to lock it.
-
-Log in first — anonymous deploys create a temporary project and won't keep your data.
+After opening the site, set the default SUBAPI and SUBCONFIG in **Site settings** — until then the homepage will say the admin hasn't configured defaults. Set an admin password there too when you want to lock it.
 
 ---
 
