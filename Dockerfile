@@ -5,6 +5,8 @@ COPY tsconfig.json ./
 RUN npm ci --ignore-scripts
 COPY src ./src
 COPY public ./public
+COPY scripts ./scripts
+COPY ACL4SSR ./ACL4SSR
 RUN npm run build
 
 FROM node:22-alpine
