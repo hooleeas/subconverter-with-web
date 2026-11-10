@@ -107,11 +107,11 @@ Image platforms: `linux/amd64`, `linux/arm64`, `linux/arm/v7`.
 
 You need a Cloudflare account. No command line needed — everything is done in the [Cloudflare dashboard](https://dash.cloudflare.com).
 
-1. **Create the D1 database.** In the dashboard, go to **Storage & Databases → D1 SQL → Create** and name it `subconverter`. Your data lives here; the app creates its tables on first use.
+1. **Create a D1 database.** In the dashboard, go to **Storage & Databases → D1 SQL → Create** and give it any name (for example `subconverter`). Your data lives here; the app creates its tables on first use.
 2. **Create the Pages project.** Go to **Workers & Pages → Create → Pages → Connect to Git**, pick this repo, and set:
    - Build command: `npm ci && cp public/admin.html public/admin-page`
    - Build output directory: `public`
-3. **Bind the database.** In the project, go to **Settings → Bindings → Add → D1 database**, set the variable name to `DB` and pick the `subconverter` database.
+3. **Bind the database.** In the project, go to **Settings → Bindings → Add → D1 database**, pick the database you just created, and set the variable name to `DB` — this name is fixed, the app reads its data from `DB`.
 4. **Deploy.** Save and Cloudflare starts the first deployment. Your site will be live at `https://<project-name>.pages.dev`, and later pushes deploy automatically.
 
 Open it and start converting — no admin password is set at first, so `/admin` opens directly. Set one in **Site settings** when you want to lock it.

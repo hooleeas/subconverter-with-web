@@ -107,11 +107,11 @@ services:
 
 需要一个 Cloudflare 账号，全程在[Cloudflare 控制台](https://dash.cloudflare.com)里点鼠标，不用命令行。
 
-1. **建 D1 数据库。**控制台里进 **Storage & Databases → D1 SQL → Create**，名字填 `subconverter`。数据存在这里，表第一次用时自动建好。
+1. **建 D1 数据库。**控制台里进 **Storage & Databases → D1 SQL → Create**，名字随便填（比如 `subconverter`）。数据存在这里，表第一次用时自动建好。
 2. **建 Pages 项目。**进 **Workers & Pages → Create → Pages → Connect to Git**，选这个仓库，填：
    - 构建命令：`npm ci && cp public/admin.html public/admin-page`
    - 构建输出目录：`public`
-3. **绑数据库。**在项目里进 **Settings → Bindings → Add → D1 database**，变量名填 `DB`，选 `subconverter` 这个库。
+3. **绑数据库。**在项目里进 **Settings → Bindings → Add → D1 database**，选刚建的那个库，变量名填 `DB`——这个名字是死的，程序就是读 `DB` 这个变量。
 4. **部署。**保存后 Cloudflare 就开始部署，网站在 `https://<项目名>.pages.dev`，以后推送代码会自动部署。
 
 打开就能用——一开始没设管理员密码，`/admin` 直接进。想锁上时去**站点设置**里设密码。
