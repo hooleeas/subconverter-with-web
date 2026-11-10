@@ -1,6 +1,6 @@
 # subconverter-with-web
 
-Subscription converter — a TypeScript + Hono rewrite of my C++ project [subconverter-new](https://github.com/hooleeas/subconverter-new). Convert proxy subscription links into Base64, Clash, sing-box, Surge, Loon, and Quantumult X formats, with a web admin panel.
+Subscription converter — a TypeScript + Hono rewrite of [hooleeas/subconverter-new](https://github.com/hooleeas/subconverter-new). Convert proxy subscription links into Base64, Clash, sing-box, Surge, Loon, and Quantumult X formats, with a web admin panel.
 
 [中文](README.zh-CN.md) · [فارسی](README.fa.md)
 
