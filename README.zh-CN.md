@@ -88,7 +88,7 @@ docker run -d --name subconverter-web \
   hooleeas/subconverter-with-web:latest
 ```
 
-或用 Compose：
+或用 Compose（把下面存为 `/opt/subconverter-with-web/docker-compose.yml`）：
 
 ```yaml
 services:
@@ -117,11 +117,8 @@ rm -rf /opt/subconverter-with-web
 ```sh
 docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
-# 可选：删除全部数据，删了找不回来
-rm -rf ./data
-# 删掉 compose 文件和所在目录（目录名不一样就换成你自己的）
-rm -f docker-compose.yml compose.yml compose.yaml
-cd .. && rm -rf subconverter-with-web
+# 可选：整个目录一起删，包括全部数据和 compose 文件，删了找不回来
+rm -rf /opt/subconverter-with-web
 ```
 
 ### Cloudflare Pages

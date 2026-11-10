@@ -88,7 +88,7 @@ docker run -d --name subconverter-web \
   hooleeas/subconverter-with-web:latest
 ```
 
-Or with Compose:
+Or with Compose (save the following as `/opt/subconverter-with-web/docker-compose.yml`):
 
 ```yaml
 services:
@@ -117,12 +117,8 @@ To uninstall (installed with Compose):
 ```sh
 docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
-# Optional: delete all data — cannot be undone
-rm -rf ./data
-# Delete the compose file and the project folder
-# (replace subconverter-with-web with your folder name if different)
-rm -f docker-compose.yml compose.yml compose.yaml
-cd .. && rm -rf subconverter-with-web
+# Optional: delete the whole folder, including all data and the compose file — cannot be undone
+rm -rf /opt/subconverter-with-web
 ```
 
 ### Cloudflare Pages

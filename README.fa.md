@@ -90,7 +90,7 @@ docker run -d --name subconverter-web \
   hooleeas/subconverter-with-web:latest
 ```
 
-یا با Compose:
+یا با Compose (ذخیره به‌عنوان `/opt/subconverter-with-web/docker-compose.yml`):
 
 ```yaml
 services:
@@ -119,11 +119,8 @@ rm -rf /opt/subconverter-with-web
 ```sh
 docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
-# اختیاری: حذف همه داده‌ها — قابل بازگشت نیست
-rm -rf ./data
-# حذف فایل compose و پوشه پروژه (اگر نام پوشه فرق می‌کند، عوضش کنید)
-rm -f docker-compose.yml compose.yml compose.yaml
-cd .. && rm -rf subconverter-with-web
+# اختیاری: حذف کل پوشه، شامل همه داده‌ها و فایل compose — قابل بازگشت نیست
+rm -rf /opt/subconverter-with-web
 ```
 
 ### Cloudflare Pages
