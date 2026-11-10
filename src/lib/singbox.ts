@@ -173,7 +173,7 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
     },
     inbounds: [
       { type: 'mixed', tag: 'mixed-in', listen: '0.0.0.0', listen_port: 2080 },
-      { type: 'tun', tag: 'tun-in', address: ['172.19.0.1/30'], auto_route: true, strict_route: true, stack: 'mixed' },
+      { type: 'tun', tag: 'tun-in', address: ['172.19.0.1/30'], auto_route: true, strict_route: true },
     ],
     ...(wireguardNodes.length ? { endpoints: wireguardNodes.map(wireguardEndpoint) } : {}),
     outbounds,
