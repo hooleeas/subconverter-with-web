@@ -61,4 +61,11 @@ export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets
 }
 
 function errorMessage(error:unknown):string{return error instanceof Error?error.message:String(error)}
-async function cachedText(store:Store|null,url:string,fetcher:typeof fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string){const key=`cache:${url}`;const cached=await store?.get(key);if(cached!==null&&cached!==undefined)return cached;const body=await fetchRuleText(url,fetcher,assets,assetBase);await store?.put(key,body,Date.now()+3600000);return body;}
+async function cachedText(store:Store|null,url:string,fetcher:typeof fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string){
+ // Bundled rules are read from ASSETS (fast, local) on edge runtimes, so
+ // skip the BlobStore cache for local:// files entirely: one Blob get
+ // already takes 0.8-3.5s, and 16 of them (1 sequential + 15 parallel)
+ // exceed the platform's kill threshold even on a cache hit. The store
+ // cache is only for the GitHub path (no ASSETS binding, e.g. Node).
+ if(url.startsWith(LOCAL_RULE_PREFIX)&&assets)return fetchRuleText(url,fetcher,assets,assetBase);
+ const key=`cache:${url}`;const cached=await store?.get(key);if(cached!==null&&cached!==undefined)return cached;const body=await fetchRuleText(url,fetcher,assets,assetBase);await store?.put(key,body,Date.now()+3600000);return body;}
