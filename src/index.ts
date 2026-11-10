@@ -334,6 +334,7 @@ app.post('/api/convert', async c => {
   try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON body' }, 400); }
   const sources = body.text ? [body.text] : [];
   const db=store(c);
+  const assets=(c.env as any)?.ASSETS;
   const urls = [...(body.urls || []), ...(body.url ? [body.url] : [])];
   if (urls.length > 20) return c.json({ error: 'At most 20 upstreams are allowed' }, 400);
   const upstreams: URL[] = [];
@@ -362,12 +363,12 @@ app.post('/api/convert', async c => {
   if (!nodes.length) return c.json({ error: 'No supported nodes found' }, 400);
   const format = (body.format || 'singbox').toLowerCase();
   try {
-  if (format === 'clash') { if(!nodes.some(isMihomoCompatible))return c.json({error:'No nodes supported by Mihomo/Clash Meta for this input'},400);let rules; try { rules=await loadRules(db, body.rulesUrl); } catch(e) { return c.json({error:e instanceof Error?e.message:'Could not load rules'},502); } return c.text(clash(nodes,rules), 200, { 'content-type': 'text/plain; charset=utf-8' }); }
+  if (format === 'clash') { if(!nodes.some(isMihomoCompatible))return c.json({error:'No nodes supported by Mihomo/Clash Meta for this input'},400);let rules; try { rules=await loadRules(db, body.rulesUrl, undefined, assets); } catch(e) { return c.json({error:e instanceof Error?e.message:'Could not load rules'},502); } return c.text(clash(nodes,rules), 200, { 'content-type': 'text/plain; charset=utf-8' }); }
   if (format === 'base64' || format === 'v2rayn') return c.text(encodeBase64(nodes.map(n => n.raw || `${n.type}://${n.server}:${n.port}#${encodeURIComponent(n.name)}`).join('\n')), 200, { 'content-type': 'text/plain; charset=utf-8' });
   if (format === 'singbox' || format === 'sing-box') {
     if (!nodes.some(isSingboxCompatible)) return c.json({ error: 'No input nodes are compatible with the current sing-box outbound schema (currently unsupported: XHTTP, VLESS encryption, SSR, Mieru, TUIC v4, Snell v3)' }, 400);
     let rules;
-    try { rules = await loadRules(db, body.rulesUrl); }
+    try { rules = await loadRules(db, body.rulesUrl, undefined, assets); }
     catch (e) { return c.json({ error: e instanceof Error ? e.message : 'Could not load rules' }, 502); }
     return c.json(singbox(nodes, rules));
   }
@@ -375,7 +376,7 @@ app.post('/api/convert', async c => {
     const compatible = format === 'surge' ? isSurgeCompatible : format === 'loon' ? isLoonCompatible : isQuanxCompatible;
     if (!nodes.some(compatible)) return c.json({ error: `No nodes supported by ${format}` }, 400);
     let rules;
-    try { rules = await loadRules(db, body.rulesUrl); }
+    try { rules = await loadRules(db, body.rulesUrl, undefined, assets); }
     catch (e) { return c.json({ error: e instanceof Error ? e.message : 'Could not load rules' }, 502); }
     const renderer = format === 'surge' ? surge : format === 'loon' ? loon : quanx;
     return c.text(renderer(nodes, rules), 200, { 'content-type': 'text/plain; charset=utf-8' });
