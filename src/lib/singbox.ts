@@ -172,7 +172,7 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
       reverse_mapping: true,
     },
     inbounds: [
-      { type: 'mixed', tag: 'mixed-in', listen: '0.0.0.0', listen_port: 2080 },
+      { type: 'mixed', tag: 'mixed-in', listen: '127.0.0.1', listen_port: 2080 },
       { type: 'tun', tag: 'tun-in', address: ['172.19.0.1/30'], auto_route: true, strict_route: true },
     ],
     ...(wireguardNodes.length ? { endpoints: wireguardNodes.map(wireguardEndpoint) } : {}),
@@ -192,9 +192,5 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
       ...(geoipTags.length ? { default_http_client: 'rule-set-http' } : {}),
     },
     ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m' },
-    experimental: {
-      cache_file: { enabled: true, store_fakeip: true },
-      clash_api: { external_controller: '127.0.0.1:9090', external_ui: 'dashboard' },
-    },
   };
 }
