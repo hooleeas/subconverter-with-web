@@ -329,6 +329,24 @@ app.get('/api/rules/template', async c => {
   }
   return c.text(text!, 200, { 'content-type': 'text/plain; charset=utf-8', 'x-cache': hit ? 'HIT' : 'MISS' });
 });
+// In-memory upstream cache (per isolate, 60s TTL): the upstream fetch
+// (2-5s) dominates a conversion, and repeated hits for the same
+// subscription would otherwise re-fetch it every time. A cache hit
+// skips the fetch entirely, leaving only the parse + render. This
+// also shields conversions from a slow or flaky upstream.
+const upstreamCache = new Map<string, { text: string; at: number }>();
+const UPSTREAM_TTL_MS = 60_000;
+function upstreamCached(url: URL): string | null {
+  const hit = upstreamCache.get(url.href);
+  if (!hit) return null;
+  if (Date.now() - hit.at > UPSTREAM_TTL_MS) { upstreamCache.delete(url.href); return null; }
+  return hit.text;
+}
+function upstreamStore(url: URL, text: string) {
+  if (upstreamCache.size >= 100) upstreamCache.clear();
+  upstreamCache.set(url.href, { text, at: Date.now() });
+}
+
 app.post('/api/convert', async c => {
   let body: { url?: string; urls?: string[]; text?: string; format?: string; rulesUrl?: string; noAds?: string };
   try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON body' }, 400); }
@@ -346,10 +364,14 @@ app.post('/api/convert', async c => {
     upstreams.push(url);
   }
   const fetched: Array<{ text: string } | { error: string }> = await Promise.all(upstreams.map(async url => {
+    const cached = upstreamCached(url);
+    if (cached !== null) return { text: cached };
     try {
       const response = await fetch(url, { signal: timeoutSignal(15000) });
       if (!response.ok) return { error: `Upstream ${url.host} returned ${response.status}` };
-      return { text: await response.text() };
+      const text = await response.text();
+      upstreamStore(url, text);
+      return { text };
     } catch { return { error: `Could not fetch upstream: ${url.host}` }; }
   }));
   const failure = fetched.find(result => 'error' in result);
