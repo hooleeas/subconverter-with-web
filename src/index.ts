@@ -560,10 +560,6 @@ async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Respo
   const decorate=(response:Response)=>{
     const headers=new Headers(response.headers);headers.set('cache-control','no-store');
     const _dn=defaultSubName(record.name);
-    const _ext=({clash:'.yaml',singbox:'.json',surge:'.conf',quanx:'.conf',loon:'.conf',base64:'.txt'} as Record<string,string>)[format]||'.txt';
-    const _safe=_dn.replace(/["\\\r\n]/g,'').slice(0,80)||id;
-    const _fn=_safe+_ext;
-    if(!query.has('raw'))headers.set('content-disposition',`attachment; filename="${_fn}"; filename*=UTF-8''${encodeURIComponent(_fn)}`);
     headers.set('profile-title',_dn);
     headers.set('profile-web-page-url',publicUrl(c,aggregatePath(record,id)));
     return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
@@ -621,7 +617,7 @@ function subscriptionPortal(aggregate: string, id: string, record:any={}, ua:str
     const href = esc(address);
     const qrValue = target === 'singbox' ? 'sing-box://import-remote-profile?url=' + encodeURIComponent(address) : address;
     const qr = esc(qrValue);
-    return '<article><div><div class="fmt-head"><strong>'+label+'</strong><span class="fmt-actions"><a class="copy-btn" href="'+href+'&amp;raw=1" target="_blank" rel="noopener" data-i18n="jump">跳转</a><button type="button" class="copy-btn qr-btn" data-i18n="qr_show">显示二维码</button><button type="button" class="copy-btn" data-i18n="copy" data-copy="'+href+'">复制</button></span><div class="qr-panel"><div class="qr" data-qr="'+qr+'" aria-label="'+label+'二维码"></div></div></div><span class="address">'+href+'</span></div></article>';
+    return '<article><div><div class="fmt-head"><strong>'+label+'</strong><span class="fmt-actions"><a class="copy-btn" href="'+href+'" target="_blank" rel="noopener" data-i18n="jump">跳转</a><button type="button" class="copy-btn qr-btn" data-i18n="qr_show">显示二维码</button><button type="button" class="copy-btn" data-i18n="copy" data-copy="'+href+'">复制</button></span><div class="qr-panel"><div class="qr" data-qr="'+qr+'" aria-label="'+label+'二维码"></div></div></div><span class="address">'+href+'</span></div></article>';
   }).join('');
   const safeAggregate = esc(aggregate);
   const nameFrag = '#'+encodeURIComponent(String(record.name||''));
