@@ -348,13 +348,23 @@ function upstreamStore(url: URL, text: string) {
   upstreamCache.set(url.href, { text, at: Date.now() });
 }
 
+function requestOrigin(c: any): string {
+  // Behind a TLS-terminating proxy (EdgeOne/Cloudflare) the origin
+  // sees plain HTTP; honor X-Forwarded-Proto so generated URLs
+  // stay HTTPS like the client-facing address.
+  const url = new URL(c.req.url);
+  const proto = c.req.header('x-forwarded-proto');
+  if (proto) url.protocol = proto.split(',')[0]!.trim() + ':';
+  return url.origin;
+}
+
 app.post('/api/convert', async c => {
   let body: { url?: string; urls?: string[]; text?: string; format?: string; rulesUrl?: string; noAds?: string };
   try { body = await c.req.json(); } catch { return c.json({ error: 'Invalid JSON body' }, 400); }
   const sources = body.text ? [body.text] : [];
   const db=store(c);
   const assets=(c.env as any)?.ASSETS;
-  const assetBase=new URL(c.req.url).origin+'/_rules/ACL4SSR/Clash/';
+  const assetBase=requestOrigin(c)+'/_rules/ACL4SSR/Clash/';
   const urls = [...(body.urls || []), ...(body.url ? [body.url] : [])];
   if (urls.length > 20) return c.json({ error: 'At most 20 upstreams are allowed' }, 400);
   const upstreams: URL[] = [];
@@ -394,7 +404,7 @@ app.post('/api/convert', async c => {
     let rules;
     try { rules = await loadRules(db, body.rulesUrl, undefined, assets, assetBase); }
     catch (e) { return c.json({ error: e instanceof Error ? e.message : 'Could not load rules' }, 502); }
-    return c.json(singbox(nodes, rules, new URL(c.req.url).origin + '/_rules'));
+    return c.json(singbox(nodes, rules, requestOrigin(c) + '/_rules'));
   }
   if (format === 'surge' || format === 'loon' || format === 'quanx' || format === 'quantumultx' || format === 'quantumult-x') {
     const compatible = format === 'surge' ? isSurgeCompatible : format === 'loon' ? isLoonCompatible : isQuanxCompatible;
