@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const dst = join(root, 'public', 'ACL4SSR');
+const dst = join(root, 'public', '_rules', 'ACL4SSR');
 rmSync(dst, { recursive: true, force: true });
 cpSync(join(root, 'ACL4SSR'), dst, {
   recursive: true,

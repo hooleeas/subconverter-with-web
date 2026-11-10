@@ -335,7 +335,7 @@ app.post('/api/convert', async c => {
   const sources = body.text ? [body.text] : [];
   const db=store(c);
   const assets=(c.env as any)?.ASSETS;
-  const assetBase=new URL(c.req.url).origin+'/ACL4SSR/Clash/';
+  const assetBase=new URL(c.req.url).origin+'/_rules/ACL4SSR/Clash/';
   const urls = [...(body.urls || []), ...(body.url ? [body.url] : [])];
   if (urls.length > 20) return c.json({ error: 'At most 20 upstreams are allowed' }, 400);
   const upstreams: URL[] = [];
@@ -410,15 +410,25 @@ app.get('/sub', async c => {
   return app.fetch(request, c.env);
 });
 // Serve bundled ACL4SSR ini files as plaintext raw: /ACL4SSR/Clash/config/<file>.ini
-// Reads from the startup-cached local rule files (same cache loadRules uses).
+// The bundled files live as static assets under /_rules (not /ACL4SSR):
+// a static file at /ACL4SSR/... would be served by the platform as
+// application/octet-stream before the function runs, triggering a
+// download. Read it via ASSETS and return it as text/plain instead.
 app.get('/ACL4SSR/Clash/config/:file', async c => {
   const file = c.req.param('file');
   if (!/^[\w.-]+\.ini$/i.test(file)) return c.text('404 Not found', 404);
+  if (c.env?.ASSETS) {
+    try {
+      const res = await c.env.ASSETS.fetch(new Request(new URL('/_rules/ACL4SSR/Clash/config/'+file, c.req.url)));
+      if (res.ok) return c.text(await res.text(), 200, { 'content-type': 'text/plain; charset=utf-8' });
+    } catch {}
+  }
   const db = store(c);
-  if (!db) return c.text('404 Not found', 404);
-  const content = await db.get(`cache:${LOCAL_RULE_PREFIX}config/${file}`);
-  if (content === null || content === undefined) return c.text('404 Not found', 404);
-  return c.text(content, 200, { 'content-type': 'text/plain; charset=utf-8' });
+  if (db) {
+    const content = await db.get(`cache:${LOCAL_RULE_PREFIX}config/${file}`);
+    if (content !== null && content !== undefined) return c.text(content, 200, { 'content-type': 'text/plain; charset=utf-8' });
+  }
+  return c.text('404 Not found', 404);
 });
 app.get('/api/:id', async c => {
   const db=store(c);if(!db)return c.json({error:'Database binding is missing'},503);

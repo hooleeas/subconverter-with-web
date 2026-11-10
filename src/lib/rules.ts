@@ -47,7 +47,7 @@ export function timeoutSignal(ms: number): AbortSignal {
 }
 
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string):Promise<string>{
- // Bundled rule files ship as static assets (public/ACL4SSR). On edge
+ // Bundled rule files ship as static assets (public/_rules/ACL4SSR). On edge
  // runtimes read them from the ASSETS binding instead of GitHub: fetching
  // 15 lists from raw.githubusercontent.com at request time is slow and
  // gets the function killed (HTTP 545). The asset URL must use the real
@@ -55,7 +55,7 @@ export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets
  // Fall back to GitHub if the binding is absent or the file is not deployed.
  if(url.startsWith(LOCAL_RULE_PREFIX)&&assets){
   try{
-   const res=await assets.fetch(new Request((assetBase||'https://assets.local/ACL4SSR/Clash/')+url.slice(LOCAL_RULE_PREFIX.length)));
+   const res=await assets.fetch(new Request((assetBase||'https://assets.local/_rules/ACL4SSR/Clash/')+url.slice(LOCAL_RULE_PREFIX.length)));
    if(res.ok)return res.text();
   }catch{}
  }
