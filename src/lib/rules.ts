@@ -82,9 +82,10 @@ export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets
 
 function errorMessage(error:unknown):string{return error instanceof Error?error.message:String(error)}
 async function cachedText(store:Store|null,url:string,fetcher:typeof fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string){
- // Bundled rules are read from memory (RULE_FILES) on edge runtimes, so
- // skip the store cache for local:// files entirely: the inlined read
- // is already instant. The store cache is only for the GitHub path
- // (no ASSETS binding, e.g. Node).
- if(url.startsWith(LOCAL_RULE_PREFIX)&&assets)return fetchRuleText(url,fetcher,assets,assetBase);
+ // Check the store first for every URL. On Node the store is pre-filled
+ // from disk at startup (see node.ts cacheLocalRuleFiles), so local://
+ // files are served straight from the local cache with no HTTP fetch.
+ // On edge runtimes the store is empty for local:// files and this falls
+ // through to fetchRuleText (RULE_FILES in memory, then ASSETS, then
+ // GitHub) exactly as before.
  const key=`cache:${url}`;const cached=await store?.get(key);if(cached!==null&&cached!==undefined)return cached;const body=await fetchRuleText(url,fetcher,assets,assetBase);await store?.put(key,body,Date.now()+3600000);return body;}
