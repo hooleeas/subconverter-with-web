@@ -105,28 +105,33 @@ Image platforms: `linux/amd64`, `linux/arm64`, `linux/arm/v7`.
 
 ### Cloudflare Pages
 
-```sh
-# 1. Create the D1 database
-npx wrangler d1 create subconverter
+You need a Cloudflare account. No command line needed — everything is done in the [Cloudflare dashboard](https://dash.cloudflare.com).
 
-# 2. Put the returned database_id into pages/wrangler.jsonc
-#    (replace REPLACE_WITH_D1_DATABASE_ID)
+1. **Create the D1 database.** In the dashboard, go to **Storage & Databases → D1 SQL → Create** and name it `subconverter`. Your data lives here; the app creates its tables on first use.
+2. **Create the Pages project.** Go to **Workers & Pages → Create → Pages → Connect to Git**, pick this repo, and set:
+   - Build command: `npm ci && cp public/admin.html public/admin-page`
+   - Build output directory: `public`
+3. **Bind the database.** In the project, go to **Settings → Bindings → Add → D1 database**, set the variable name to `DB` and pick the `subconverter` database.
+4. **Deploy.** Save and Cloudflare starts the first deployment. Your site will be live at `https://<project-name>.pages.dev`, and later pushes deploy automatically.
 
-# 3. Deploy
-npm run deploy:pages
-```
+Open it and start converting — no admin password is set at first, so `/admin` opens directly. Set one in **Site settings** when you want to lock it.
 
 ### EdgeOne Makers
 
+You need an EdgeOne account (Tencent Cloud) and Node.js 22+. Storage needs no setup — it is created automatically on first use.
+
 ```sh
-# 1. Install the CLI (once)
+# 1. Install the CLI (once) and log in (opens a browser to authorize)
 npm i -g edgeone
+edgeone login
 
 # 2. Deploy from the project root
-edgeone makers deploy
+edgeone makers deploy -n subconverter-with-web
 ```
 
-Blob storage needs no setup — the `subconverter` store is created on first write.
+Your site will be live at `https://subconverter-with-web.edgeone.cool`. Open it and start converting — no admin password is set at first, so `/admin` opens directly. Set one in **Site settings** when you want to lock it.
+
+Log in first — anonymous deploys create a temporary project and won't keep your data.
 
 ---
 

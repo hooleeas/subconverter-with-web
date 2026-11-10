@@ -107,28 +107,33 @@ services:
 
 ### Cloudflare Pages
 
-```sh
-# 1. ساخت پایگاه D1
-npx wrangler d1 create subconverter
+به یک حساب Cloudflare نیاز دارید. همه‌کار در [داشبورد Cloudflare](https://dash.cloudflare.com) انجام می‌شود — بدون خط فرمان.
 
-# 2. شناسه برگشتی را در pages/wrangler.jsonc بگذارید
-#    (جای REPLACE_WITH_D1_DATABASE_ID)
+1. **ساخت پایگاه D1.** در داشبورد به **Storage & Databases → D1 SQL → Create** بروید و نام آن را `subconverter` بگذارید. داده‌های شما اینجاست؛ جدول‌ها در اولین استفاده ساخته می‌شوند.
+2. **ساخت پروژه Pages.** به **Workers & Pages → Create → Pages → Connect to Git** بروید، این مخزن را انتخاب کنید و این‌ها را بگذارید:
+   - Build command: `npm ci && cp public/admin.html public/admin-page`
+   - Build output directory: `public`
+3. **اتصال پایگاه.** در پروژه به **Settings → Bindings → Add → D1 database** بروید، نام متغیر را `DB` بگذارید و پایگاه `subconverter` را انتخاب کنید.
+4. **استقرار.** ذخیره کنید و Cloudflare استقرار را شروع می‌کند. سایت شما در `https://<project-name>.pages.dev` بالا می‌آید و پوش‌های بعدی خودکار مستقر می‌شوند.
 
-# 3. استقرار
-npm run deploy:pages
-```
+آن را باز کنید و شروع به تبدیل کنید — در ابتدا رمزی برای مدیریت تعیین نشده، پس `/admin` مستقیم باز می‌شود. هر وقت خواستید قفلش کنید، از **تنظیمات سایت** رمز بگذارید.
 
 ### EdgeOne Makers
 
+به یک حساب EdgeOne (Tencent Cloud) و Node.js 22+ نیاز دارید. ذخیره‌سازی نیازی به تنظیم ندارد — در اولین استفاده خودکار ساخته می‌شود.
+
 ```sh
-# 1. نصب CLI (فقط یک بار)
+# 1. نصب CLI (فقط یک بار) و ورود (مرورگر برای تأیید باز می‌شود)
 npm i -g edgeone
+edgeone login
 
 # 2. استقرار از ریشه پروژه
-edgeone makers deploy
+edgeone makers deploy -n subconverter-with-web
 ```
 
-ذخیره‌سازی Blob نیازی به پیکربندی ندارد — مخزن `subconverter` در اولین نوشتن ساخته می‌شود.
+سایت شما در `https://subconverter-with-web.edgeone.cool` بالا می‌آید. آن را باز کنید و شروع به تبدیل کنید — در ابتدا رمزی برای مدیریت تعیین نشده، پس `/admin` مستقیم باز می‌شود. هر وقت خواستید قفلش کنید، از **تنظیمات سایت** رمز بگذارید.
+
+اول وارد شوید — استقرار ناشناس پروژه موقت می‌سازد و داده‌های شما نمی‌ماند.
 
 ---
 

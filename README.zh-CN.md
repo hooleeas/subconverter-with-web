@@ -105,28 +105,33 @@ services:
 
 ### Cloudflare Pages
 
-```sh
-# 1. 建 D1 数据库
-npx wrangler d1 create subconverter
+需要一个 Cloudflare 账号，全程在[Cloudflare 控制台](https://dash.cloudflare.com)里点鼠标，不用命令行。
 
-# 2. 把返回的 database_id 填进 pages/wrangler.jsonc
-#    （替换 REPLACE_WITH_D1_DATABASE_ID）
+1. **建 D1 数据库。**控制台里进 **Storage & Databases → D1 SQL → Create**，名字填 `subconverter`。数据存在这里，表第一次用时自动建好。
+2. **建 Pages 项目。**进 **Workers & Pages → Create → Pages → Connect to Git**，选这个仓库，填：
+   - 构建命令：`npm ci && cp public/admin.html public/admin-page`
+   - 构建输出目录：`public`
+3. **绑数据库。**在项目里进 **Settings → Bindings → Add → D1 database**，变量名填 `DB`，选 `subconverter` 这个库。
+4. **部署。**保存后 Cloudflare 就开始部署，网站在 `https://<项目名>.pages.dev`，以后推送代码会自动部署。
 
-# 3. 部署
-npm run deploy:pages
-```
+打开就能用——一开始没设管理员密码，`/admin` 直接进。想锁上时去**站点设置**里设密码。
 
 ### EdgeOne Makers
 
+需要一个 EdgeOne 账号（腾讯云）和 Node.js 22+。存储不用配置，第一次用时自动建好。
+
 ```sh
-# 1. 装 CLI（一次就行）
+# 1. 装 CLI（一次就行），登录（会打开浏览器授权）
 npm i -g edgeone
+edgeone login
 
 # 2. 在项目根目录部署
-edgeone makers deploy
+edgeone makers deploy -n subconverter-with-web
 ```
 
-Blob 存储不用配置，`subconverter` 这个库第一次写数据时自动建好。
+部署完网站在 `https://subconverter-with-web.edgeone.cool`。打开就能用——一开始没设管理员密码，`/admin` 直接进。想锁上时去**站点设置**里设密码。
+
+先登录再部署——匿名部署建的是临时项目，数据留不住。
 
 ---
 
