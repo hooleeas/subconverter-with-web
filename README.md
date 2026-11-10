@@ -119,9 +119,11 @@ docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
 # Optional: delete all data — cannot be undone
 rm -rf ./data
+# Delete the compose file and the project folder
+# (replace subconverter-with-web with your folder name if different)
+rm -f docker-compose.yml compose.yml compose.yaml
+cd .. && rm -rf subconverter-with-web
 ```
-
-Then delete the compose file and its folder to remove everything.
 
 ### Cloudflare Pages
 

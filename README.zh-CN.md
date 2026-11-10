@@ -119,9 +119,10 @@ docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
 # 可选：删除全部数据，删了找不回来
 rm -rf ./data
+# 删掉 compose 文件和所在目录（目录名不一样就换成你自己的）
+rm -f docker-compose.yml compose.yml compose.yaml
+cd .. && rm -rf subconverter-with-web
 ```
-
-最后删掉 compose 文件和所在目录，就干净了。
 
 ### Cloudflare Pages
 

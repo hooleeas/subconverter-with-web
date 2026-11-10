@@ -121,9 +121,10 @@ docker compose down
 docker rmi hooleeas/subconverter-with-web:latest
 # اختیاری: حذف همه داده‌ها — قابل بازگشت نیست
 rm -rf ./data
+# حذف فایل compose و پوشه پروژه (اگر نام پوشه فرق می‌کند، عوضش کنید)
+rm -f docker-compose.yml compose.yml compose.yaml
+cd .. && rm -rf subconverter-with-web
 ```
-
-در پایان، فایل compose و پوشه آن را هم حذف کنید تا همه‌چیز پاک شود.
 
 ### Cloudflare Pages
 
