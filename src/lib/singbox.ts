@@ -122,7 +122,7 @@ function routeRule(rule: string, outboundTags: Set<string>): Record<string, unkn
   return result;
 }
 
-export function singbox(nodes: Node[], ruleConfig?: RuleConfig) {
+export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: string) {
   const compatibleNodes = nodes.filter(isSingboxCompatible);
   const wireguardNodes = compatibleNodes.filter(node => node.type === 'wireguard');
   const proxyNodes = compatibleNodes.filter(node => node.type !== 'wireguard');
@@ -187,7 +187,7 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig) {
       auto_detect_interface: true,
       default_domain_resolver: 'dns_resolver',
       rules,
-      ...(geoipTags.length ? { rule_set: geoipTags.map(tag => ({ type: 'remote', tag, format: 'binary', url: `https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/${tag}.srs`, update_interval: '1d' })) } : {}),
+      ...(geoipTags.length ? { rule_set: geoipTags.map(tag => ({ type: 'remote', tag, format: 'binary', url: `${ruleSetBase || 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set'}/${tag}.srs`, update_interval: '1d' })) } : {}),
       final: routeFinal,
       ...(geoipTags.length ? { default_http_client: 'rule-set-http' } : {}),
     },

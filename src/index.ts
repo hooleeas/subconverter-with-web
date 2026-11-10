@@ -394,7 +394,7 @@ app.post('/api/convert', async c => {
     let rules;
     try { rules = await loadRules(db, body.rulesUrl, undefined, assets, assetBase); }
     catch (e) { return c.json({ error: e instanceof Error ? e.message : 'Could not load rules' }, 502); }
-    return c.json(singbox(nodes, rules));
+    return c.json(singbox(nodes, rules, new URL(c.req.url).origin + '/_rules'));
   }
   if (format === 'surge' || format === 'loon' || format === 'quanx' || format === 'quantumultx' || format === 'quantumult-x') {
     const compatible = format === 'surge' ? isSurgeCompatible : format === 'loon' ? isLoonCompatible : isQuanxCompatible;
