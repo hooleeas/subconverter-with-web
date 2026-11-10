@@ -129,7 +129,7 @@ rm -rf /opt/subconverter-with-web
 
 1. **ساخت پایگاه D1.** در داشبورد به **Storage & Databases → D1 SQL → Create** بروید و هر نامی خواستید بگذارید (مثلاً `subconverter`). داده‌های شما اینجاست؛ جدول‌ها در اولین استفاده ساخته می‌شوند.
 2. **ساخت پروژه Pages.** به **Workers & Pages → Create → Pages → Connect to Git** بروید، این مخزن را انتخاب کنید و این‌ها را بگذارید:
-   - Build command: `npm ci && cp public/admin.html public/admin-page`
+   - Build command: `npm ci`
    - Build output directory: `public`
 3. **اتصال پایگاه.** در پروژه به **Settings → Bindings → Add → D1 database** بروید، پایگاهی که ساختید را انتخاب کنید و نام متغیر را `DB` بگذارید — این نام ثابت است، برنامه داده را از `DB` می‌خواند.
 4. **استقرار.** ذخیره کنید و Cloudflare استقرار را شروع می‌کند. سایت شما در `https://<project-name>.pages.dev` بالا می‌آید و پوش‌های بعدی خودکار مستقر می‌شوند.

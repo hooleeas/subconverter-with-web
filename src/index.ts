@@ -114,7 +114,7 @@ app.put('/api/admin/site', async c => {
   const db=store(c);if(!db)return c.json({error:'Database binding is missing'},503);
   const body=await readJson(c);if(!body.ok)return c.json({error:'Invalid JSON body'},400);
   const v=body.value as any;let adminPath='';let homeTitle:any=null;
-  if(v?.adminPath!==undefined){adminPath=String(v.adminPath||'').trim();if(!/^\/[A-Za-z0-9_-]{3,64}$/.test(adminPath)||['/api','/admin.html','/index.html'].includes(adminPath.toLowerCase()))return c.json({error:'路径须为 / 开头的 3-64 位字母、数字、下划线或连字符'},400);await db.put('config:adminPath',JSON.stringify(adminPath));}
+  if(v?.adminPath!==undefined){adminPath=String(v.adminPath||'').trim();if(!/^\/[A-Za-z0-9_-]{3,64}$/.test(adminPath)||['/api','/admin.html','/admin-page','/index.html'].includes(adminPath.toLowerCase()))return c.json({error:'路径须为 / 开头的 3-64 位字母、数字、下划线或连字符'},400);await db.put('config:adminPath',JSON.stringify(adminPath));}
   if(v?.homeTitle!==undefined){let ht:any=v.homeTitle;if(typeof ht==='string')ht={zh:ht};if(!ht||typeof ht!=='object')return c.json({error:'首页标题格式无效'},400);const zh=String(ht.zh||'').trim(),en=String(ht.en||'').trim(),fa=String(ht.fa||'').trim();if(!zh||zh.length>50||en.length>50||fa.length>50)return c.json({error:'首页标题须为 1-50 个字符'},400);homeTitle={zh,en,fa};await db.put('config:homeTitle',JSON.stringify(homeTitle));}
   if(v?.siteIcon!==undefined){const si=String(v.siteIcon||'').trim();if(si.length>500)return c.json({error:'网站图标链接过长'},400);await db.put('config:siteIcon',si);}
   return c.json({ok:true,adminPath,homeTitle});
@@ -467,9 +467,13 @@ app.get('/:id', async (c,next) => {
 });
 app.get('*', async c => {
   const path=new URL(c.req.url).pathname;
-  if(path==='/admin.html')return c.notFound();
+  if(path==='/admin.html'||path==='/admin-page')return c.notFound();
   const db=store(c);let adminPath='/admin';if(db){try{adminPath=String(JSON.parse((await db.get('config:adminPath'))||'"/admin"')||'/admin')}catch{}}
-  if(path===adminPath){const page=new Request(new URL('/admin.html',c.req.url),c.req.raw);if(c.env?.ASSETS){const res=await c.env.ASSETS.fetch(page);if(res.status===308||res.status===301){const alt=new Request(new URL('/admin-page',c.req.url),c.req.raw);const altRes=await c.env.ASSETS.fetch(alt);if(altRes.status===200)return new Response(altRes.body,{status:200,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});return altRes}return res}if(c.env?.STATIC)return c.env.STATIC.fetch(page)}
+  // The admin page lives in the extensionless file /admin-page: Pages'
+  // clean-URL redirect turns /admin.html into a 308, so the file has no
+  // .html suffix. It is always returned as text/html (both bindings
+  // would otherwise call it application/octet-stream).
+  if(path===adminPath){const page=new Request(new URL('/admin-page',c.req.url),c.req.raw);const res=c.env?.ASSETS?await c.env.ASSETS.fetch(page):c.env?.STATIC?await c.env.STATIC.fetch(page):null;if(res)return new Response(res.body,{status:res.status,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}})}
   if (c.env?.ASSETS) return c.env.ASSETS.fetch(c.req.raw);
   if (c.env?.STATIC) return c.env.STATIC.fetch(c.req.raw);
   return c.text('Static UI is served by the Node adapter or Cloudflare assets binding.', 404);

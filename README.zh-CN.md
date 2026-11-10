@@ -127,7 +127,7 @@ rm -rf /opt/subconverter-with-web
 
 1. **建 D1 数据库。**控制台里进 **Storage & Databases → D1 SQL → Create**，名字随便填（比如 `subconverter`）。数据存在这里，表第一次用时自动建好。
 2. **建 Pages 项目。**进 **Workers & Pages → Create → Pages → Connect to Git**，选这个仓库，填：
-   - 构建命令：`npm ci && cp public/admin.html public/admin-page`
+   - 构建命令：`npm ci`
    - 构建输出目录：`public`
 3. **绑数据库。**在项目里进 **Settings → Bindings → Add → D1 database**，选刚建的那个库，变量名填 `DB`——这个名字是死的，程序就是读 `DB` 这个变量。
 4. **部署。**保存后 Cloudflare 就开始部署，网站在 `https://<项目名>.pages.dev`，以后推送代码会自动部署。
