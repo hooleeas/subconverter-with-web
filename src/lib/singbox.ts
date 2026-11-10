@@ -179,7 +179,10 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
     outbounds,
     // sing-box 1.14 requires an explicit HTTP client for remote
     // rule-sets (the implicit default was removed in 1.16.0).
-    ...(geoipTags.length ? { http_clients: [{ tag: 'rule-set-http', detour: final }] } : {}),
+    // Rule-sets are served from our own domain, directly reachable,
+    // so the client goes direct instead of through the proxy group
+    // (a proxy detour at startup can fail before any node is up).
+    ...(geoipTags.length ? { http_clients: [{ tag: 'rule-set-http', detour: 'direct' }] } : {}),
     route: {
       auto_detect_interface: true,
       default_domain_resolver: 'dns_resolver',
