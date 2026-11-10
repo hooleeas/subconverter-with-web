@@ -110,8 +110,8 @@ services:
 ```sh
 docker stop subconverter-web && docker rm subconverter-web
 docker rmi hooleeas/subconverter-with-web:latest
-# اختیاری: حذف همه داده‌ها (اشتراک‌ها، تنظیمات) — قابل بازگشت نیست
-rm -rf /opt/subconverter-with-web/data
+# اختیاری: حذف کل پوشه، شامل همه داده‌ها (اشتراک‌ها، تنظیمات) — قابل بازگشت نیست
+rm -rf /opt/subconverter-with-web
 ```
 
 برای حذف نصب (نصب‌شده با Compose):
@@ -122,6 +122,8 @@ docker rmi hooleeas/subconverter-with-web:latest
 # اختیاری: حذف همه داده‌ها — قابل بازگشت نیست
 rm -rf ./data
 ```
+
+در پایان، فایل compose و پوشه آن را هم حذف کنید تا همه‌چیز پاک شود.
 
 ### Cloudflare Pages
 

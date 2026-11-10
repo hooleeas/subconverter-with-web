@@ -108,8 +108,8 @@ services:
 ```sh
 docker stop subconverter-web && docker rm subconverter-web
 docker rmi hooleeas/subconverter-with-web:latest
-# 可选：删除全部数据（订阅、设置），删了找不回来
-rm -rf /opt/subconverter-with-web/data
+# 可选：整个目录一起删，包括全部数据（订阅、设置），删了找不回来
+rm -rf /opt/subconverter-with-web
 ```
 
 卸载（用 Compose 安装的）：
@@ -120,6 +120,8 @@ docker rmi hooleeas/subconverter-with-web:latest
 # 可选：删除全部数据，删了找不回来
 rm -rf ./data
 ```
+
+最后删掉 compose 文件和所在目录，就干净了。
 
 ### Cloudflare Pages
 

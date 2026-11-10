@@ -108,8 +108,8 @@ To uninstall (installed with `docker run`):
 ```sh
 docker stop subconverter-web && docker rm subconverter-web
 docker rmi hooleeas/subconverter-with-web:latest
-# Optional: delete all data (subscriptions, settings) — cannot be undone
-rm -rf /opt/subconverter-with-web/data
+# Optional: delete the whole folder, including all data (subscriptions, settings) — cannot be undone
+rm -rf /opt/subconverter-with-web
 ```
 
 To uninstall (installed with Compose):
@@ -120,6 +120,8 @@ docker rmi hooleeas/subconverter-with-web:latest
 # Optional: delete all data — cannot be undone
 rm -rf ./data
 ```
+
+Then delete the compose file and its folder to remove everything.
 
 ### Cloudflare Pages
 
