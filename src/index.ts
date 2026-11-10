@@ -8,7 +8,7 @@ import { fetchRuleText, loadRules, timeoutSignal } from './lib/rules.js';
 import { isSurgeCompatible, surge } from './lib/surge.js';
 import { isLoonCompatible, loon } from './lib/loon.js';
 import { isQuanxCompatible, quanx } from './lib/quanx.js';
-import { LOCAL_RULE_PREFIX, isLocalSubconfigUrl, localSubconfigs, mergeSubconfigs } from './lib/local-subconfigs.js';
+import { DEFAULT_SUBCONFIG_ID, LOCAL_RULE_PREFIX, isLocalSubconfigUrl, localSubconfigs, mergeSubconfigs } from './lib/local-subconfigs.js';
 
 type Env = { Bindings: { DB?: D1Database; STORE?: Store; ADMIN_USERNAME?: string; ADMIN_PASSWORD?: string; ASSETS?: { fetch: (request: Request) => Promise<Response> }; STATIC?: {fetch:(request:Request)=>Promise<Response>} } };
 const app = new Hono<Env>();
@@ -92,6 +92,7 @@ app.get('/api/public/options', async c => {
   const localSubconfigs=await getLocalSubconfigs(db);
   try{defaultBackendId=String(JSON.parse((await db.get('config:defaultBackendId'))||'')||'')}catch{}
   try{defaultSubconfigId=String(JSON.parse((await db.get('config:defaultSubconfigId'))||'')||'')}catch{}
+  if(!defaultSubconfigId)defaultSubconfigId=DEFAULT_SUBCONFIG_ID;
   const homeTitle=normHomeTitle(await db.get('config:homeTitle'));
   let siteIcon='/favicon.webp';try{siteIcon=String(await db.get('config:siteIcon')||'/favicon.webp').trim()||'/favicon.webp'}catch{}
   return c.json({

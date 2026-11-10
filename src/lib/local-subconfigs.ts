@@ -49,6 +49,9 @@ export const localSubconfigs: LocalSubconfig[] = presets.map(([file, name, id]) 
   localPreset: true,
 }));
 
+/** 默认 SUBCONFIG：「标准」(ACL4SSR.ini)。初次部署未配置默认时使用。 */
+export const DEFAULT_SUBCONFIG_ID = '749486b3-042f-5ec5-ab10-19daaebf532a';
+
 export function isLocalSubconfigUrl(value: unknown): value is string {
   return typeof value === 'string' && localSubconfigs.some(item => item.url === value);
 }
