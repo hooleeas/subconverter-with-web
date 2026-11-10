@@ -162,7 +162,7 @@ app.get('/api/admin/links', async c => {
   if (!(await authorized(c))) return c.json({ error: '管理员账号或密码错误，或尚未配置账号密码' }, 401);
   const db=store(c); if(!db)return c.json({error:'Database binding is missing'},503);
   const _now=Date.now();for(const _it of await db.list('aggregate:')){try{const _v=JSON.parse(_it.value);if(_v.expiresAt){const _t=new Date(_v.expiresAt).getTime();if(!isNaN(_t)&&_t<=_now)await db.delete(_it.key)}}catch{}}
-  const links=(await db.list('aggregate:')).flatMap(item=>{try{const value=JSON.parse(item.value),id=value.id||item.key.slice(10),owner=value.owner===true||value.kind==='self',url=publicUrl(c,(owner?'/':'/api/')+id);if(!owner)return [{id,url,kind:'public',name:value.name||'',expiresAt:value.expiresAt||''}];const safe={...value,id,url,owner:true};delete safe.destroyKeyHash;return [safe]}catch{return[]}});
+  const links=(await db.list('aggregate:')).flatMap(item=>{try{const value=JSON.parse(item.value),id=value.id||item.key.slice(10),owner=value.owner===true||value.kind==='self',url=publicUrl(c,(owner?'/':'/api/')+id);if(!owner){const safe={...value,id,url,kind:'public',name:defaultSubName(value.name,value.createdAt),owner:false};delete safe.destroyKeyHash;return [safe]}const safe={...value,id,url,owner:true};delete safe.destroyKeyHash;return [safe]}catch{return[]}});
   return c.json({links});
 });
 app.post('/api/admin/links', async c => {
@@ -198,11 +198,11 @@ app.put('/api/admin/links/:id', async c => {
   const id=c.req.param('id'),key='aggregate:'+id,serialized=await db.get(key);
   if(!serialized)return c.json({error:'404 Not found'},404);
   let previous:any;try{previous=JSON.parse(serialized)}catch{return c.json({error:'Stored link is invalid'},500)}
-  if(previous.kind!=='self')return c.json({error:'Public links are immutable; delete and regenerate them'},403);
+  const kind=(previous.kind==='self'||previous.owner===true)?'self':'public';
   const body=await readJson(c);if(!body.ok)return c.json({error:'Invalid JSON body'},400);
-  const updated=await makeAggregateRecord(db,body.value,id,'self',previous);if(!updated.ok)return c.json({error:updated.error},400);
+  const updated=await makeAggregateRecord(db,body.value,id,kind,previous);if(!updated.ok)return c.json({error:updated.error},400);
   await db.put(key,JSON.stringify(updated.value));
-  const safe={...updated.value,owner:true,url:publicUrl(c,'/'+id)};delete safe.destroyKeyHash;
+  const safe={...updated.value,owner:kind==='self',url:publicUrl(c,(kind==='self'?'/':'/api/')+id)};delete safe.destroyKeyHash;
   return c.json({link:safe});
 });
 app.delete('/api/admin/links/:id', async c => {
