@@ -107,9 +107,9 @@ function routeRule(rule: string, outboundTags: Set<string>): Record<string, unkn
   if (!kind || !target || !outboundTags.has(target)) return;
   const values = parts.map(value => value.trim()).filter(value => value && value.toLowerCase() !== 'no-resolve');
   if (kind === 'MATCH' || kind === 'FINAL') return;
-  if (kind === 'GEOIP' && values[0]) {
-    return { rule_set: [`geoip-${values[0].toLowerCase()}`], action: 'route', outbound: target };
-  }
+  // GEOIP rules need a remote .srs rule-set; dropped entirely —
+  // no .srs files are used. Traffic falls through to the final outbound.
+  if (kind === 'GEOIP') return;
   const keys: Record<string, string> = {
     'DOMAIN': 'domain', 'DOMAIN-SUFFIX': 'domain_suffix', 'DOMAIN-KEYWORD': 'domain_keyword',
     'IP-CIDR': 'ip_cidr', 'IP-CIDR6': 'ip_cidr',
@@ -122,7 +122,7 @@ function routeRule(rule: string, outboundTags: Set<string>): Record<string, unkn
   return result;
 }
 
-export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: string) {
+export function singbox(nodes: Node[], ruleConfig?: RuleConfig) {
   const compatibleNodes = nodes.filter(isSingboxCompatible);
   const wireguardNodes = compatibleNodes.filter(node => node.type === 'wireguard');
   const proxyNodes = compatibleNodes.filter(node => node.type !== 'wireguard');
@@ -150,7 +150,6 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
     { clash_mode: 'Direct', outbound: 'direct' },
     ...(ruleConfig?.rules || []).map(rule => routeRule(rule, groupTags)).filter((rule): rule is Record<string, unknown> => Boolean(rule)),
   ];
-  const geoipTags = [...new Set(rules.flatMap(rule => Array.isArray(rule.rule_set) ? rule.rule_set.filter((tag): tag is string => typeof tag === 'string' && tag.startsWith('geoip-')) : []))];
   const finalGroup = configuredGroups.find(group => /节点选择|proxy/i.test(group.name))?.name || groups[0]?.group.name || 'PROXY';
   const final = groupTags.has(finalGroup) ? finalGroup : 'PROXY';
   const finalRule = (ruleConfig?.rules || []).find(rule => /^(MATCH|FINAL),/i.test(rule));
@@ -177,19 +176,11 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig, ruleSetBase?: st
     ],
     ...(wireguardNodes.length ? { endpoints: wireguardNodes.map(wireguardEndpoint) } : {}),
     outbounds,
-    // sing-box 1.14 requires an explicit HTTP client for remote
-    // rule-sets (the implicit default was removed in 1.16.0).
-    // Rule-sets are served from our own domain, directly reachable,
-    // so the client goes direct instead of through the proxy group
-    // (a proxy detour at startup can fail before any node is up).
-    ...(geoipTags.length ? { http_clients: [{ tag: 'rule-set-http', detour: 'direct' }] } : {}),
     route: {
       auto_detect_interface: true,
       default_domain_resolver: 'dns_resolver',
       rules,
-      ...(geoipTags.length ? { rule_set: geoipTags.map(tag => ({ type: 'remote', tag, format: 'binary', url: `${ruleSetBase || 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set'}/${tag}.srs`, update_interval: '1d' })) } : {}),
       final: routeFinal,
-      ...(geoipTags.length ? { default_http_client: 'rule-set-http' } : {}),
     },
     ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m' },
   };
