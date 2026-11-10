@@ -3,7 +3,7 @@
 var LANGS=[{code:"zh",label:"中文"},{code:"en",label:"English"},{code:"fa",label:"فارسی"}];
 var I18N={
 zh:{
-lang_title:"选择语言",translate:"翻译",home_title:"订阅转换",home_subtitle:"聚合多个订阅源，一键转换六种客户端格式",home_formats:"支持 Base64、Clash、sing-box、Surge、Loon、Quantumult X",home_github:"获取同款项目",portal_note1:"点「导入」直接将本链接导入对应客户端；点「显示二维码」用客户端扫码导入；点「复制」复制链接后自行导入",portal_note2:"自适应订阅地址可直接导入任意支持 URL 导入的客户端",
+lang_title:"选择语言",translate:"翻译",home_title:"订阅转换",home_subtitle:"聚合多个订阅源，一键转换六种客户端格式",home_formats:"支持 Base64、Clash、sing-box、Surge、Loon、Quantumult X",home_github:"获取同款项目",portal_note1:"点「导入」直接将本链接导入对应客户端；点「二维码」用客户端扫码导入；点「复制」复制链接后自行导入",portal_note2:"自适应订阅地址可直接导入任意支持 URL 导入的客户端",
 backend_version:"后端版本",sources:"订阅源",name:"名称",exclude:"排除节点",expires:"过期时间",
 expires_off:"未启用",expires_on:"已启用",h1:"1小时",h24:"24小时",d7:"7天",d30:"30天",
 custom_path:"自定义链接路径",random_uuid:"随机 UUID",generate:"生成聚合订阅链接",
@@ -25,12 +25,12 @@ ph_remark:"填写备注",ph_group_name:"例如：Fam",ph_self_name:"例如：我
 ph_group_src:"每行一个订阅地址",ph_path_hint:"留空自动生成 UUID",
 portal_adaptive:"自适应订阅地址",
 fmt_base64:"Base64",fmt_clash:"Clash",fmt_singbox:"sing-box",fmt_surge:"Surge",fmt_loon:"Loon",fmt_quanx:"Quantumult X",
-import_btn:"导入",jump:"跳转",qr_show:"显示二维码",qr_hide:"隐藏二维码",copy:"复制",qr_label:"二维码",
+import_btn:"导入",qr_show:"二维码",qr_hide:"隐藏",copy:"复制",qr_label:"二维码",
 toast_copied:"已复制",toast_lang_na:"翻译功能尚未开放",edit:"编辑",delete:"删除",upstream_links:"个上游链接",self_default:"自用订阅",self_suffix:"（自用）",visitor:"访客订阅",expired_tpl:" · 已过期（{date}）",valid_tpl:" · 有效期至 {date}",
 hint_path:"留空自动生成 UUID；可直接输入自定义路径，或点击按钮反复生成。"
 },
 en:{
-lang_title:"Language",translate:"Translate",home_title:"Subscription Converter",home_subtitle:"Aggregate multiple subscription sources and convert to six client formats with one click",home_formats:"Supports Base64, Clash, sing-box, Surge, Loon, and Quantumult X",home_github:"Get the same project",portal_note1:"Tap Import to add this link to the matching client, Show QR Code to scan it with your client, or Copy to copy the link and import it yourself",portal_note2:"The adaptive subscription address can be imported directly into any client that supports URL import",
+lang_title:"Language",translate:"Translate",home_title:"Subscription Converter",home_subtitle:"Aggregate multiple subscription sources and convert to six client formats with one click",home_formats:"Supports Base64, Clash, sing-box, Surge, Loon, and Quantumult X",home_github:"Get the same project",portal_note1:"Tap Import to add this link to the matching client, QR Code to scan it with your client, or Copy to copy the link and import it yourself",portal_note2:"The adaptive subscription address can be imported directly into any client that supports URL import",
 backend_version:"Backend Version",sources:"Subscription Sources",name:"Name",exclude:"Exclude Nodes",expires:"Expiry",
 expires_off:"Disabled",expires_on:"Enabled",h1:"1 hour",h24:"24 hours",d7:"7 days",d30:"30 days",
 custom_path:"Custom Link Path",random_uuid:"Random UUID",generate:"Generate Aggregate Link",
@@ -52,12 +52,12 @@ ph_remark:"Enter a note",ph_group_name:"e.g. Fam",ph_self_name:"e.g. My main sub
 ph_group_src:"One subscription URL per line",ph_path_hint:"Leave empty to auto-generate a UUID",
 portal_adaptive:"Adaptive Subscription Address",
 fmt_base64:"Base64",fmt_clash:"Clash",fmt_singbox:"sing-box",fmt_surge:"Surge",fmt_loon:"Loon",fmt_quanx:"Quantumult X",
-import_btn:"Import",jump:"Open",qr_show:"Show QR Code",qr_hide:"Hide QR Code",copy:"Copy",qr_label:"QR Code",
+import_btn:"Import",qr_show:"QR Code",qr_hide:"Hide",copy:"Copy",qr_label:"QR Code",
 toast_copied:"Copied",toast_lang_na:"Translation is not available yet",edit:"Edit",delete:"Delete",upstream_links:"upstream links",self_default:"My Subscription",self_suffix:" (My)",visitor:"Visitor Subscription",expired_tpl:" · Expired ({date})",valid_tpl:" · Valid until {date}",
 hint_path:"Leave empty to auto-generate a UUID; or enter a custom path, or click the button to generate one."
 },
 fa:{
-lang_title:"انتخاب زبان",translate:"ترجمه",home_title:"مبدل اشتراک",home_subtitle:"چندین منبع اشتراک را تجمیع کنید و با یک کلیک به شش قالب کلاینت تبدیل کنید",home_formats:"پشتیبانی از Base64، Clash، sing-box، Surge، Loon و Quantumult X",home_github:"دریافت همین پروژه",portal_note1:"روی «ورودی» بزنید تا این پیوند مستقیم به کلاینت مربوطه اضافه شود؛ روی «نمایش کد QR» بزنید تا با کلاینت اسکن کنید؛ روی «کپی» بزنید تا پیوند را کپی کرده و خودتان وارد کنید",portal_note2:"آدرس اشتراک تطبیقی را می‌توان مستقیم به هر کلاینتی که از وارد کردن URL پشتیبانی می‌کند وارد کرد",
+lang_title:"انتخاب زبان",translate:"ترجمه",home_title:"مبدل اشتراک",home_subtitle:"چندین منبع اشتراک را تجمیع کنید و با یک کلیک به شش قالب کلاینت تبدیل کنید",home_formats:"پشتیبانی از Base64، Clash، sing-box، Surge، Loon و Quantumult X",home_github:"دریافت همین پروژه",portal_note1:"روی «ورودی» بزنید تا این پیوند مستقیم به کلاینت مربوطه اضافه شود؛ روی «کد QR» بزنید تا با کلاینت اسکن کنید؛ روی «کپی» بزنید تا پیوند را کپی کرده و خودتان وارد کنید",portal_note2:"آدرس اشتراک تطبیقی را می‌توان مستقیم به هر کلاینتی که از وارد کردن URL پشتیبانی می‌کند وارد کرد",
 backend_version:"نسخه بک‌اند",sources:"منابع اشتراک",name:"نام",exclude:"حذف گره‌ها",expires:"زمان انقضا",
 expires_off:"غیرفعال",expires_on:"فعال",h1:"۱ ساعت",h24:"۲۴ ساعت",d7:"۷ روز",d30:"۳۰ روز",
 custom_path:"مسیر لینک سفارشی",random_uuid:"UUID تصادفی",generate:"ایجاد لینک تجمیعی",
@@ -79,7 +79,7 @@ ph_remark:"یادداشت را وارد کنید",ph_group_name:"مثال: Fam",
 ph_group_src:"در هر خط یک آدرس اشتراک",ph_path_hint:"خالی بگذارید تا UUID به‌صورت خودکار ایجاد شود",
 portal_adaptive:"آدرس اشتراک تطبیقی",
 fmt_base64:"Base64",fmt_clash:"Clash",fmt_singbox:"sing-box",fmt_surge:"Surge",fmt_loon:"Loon",fmt_quanx:"Quantumult X",
-import_btn:"وارد کردن",jump:"باز کردن",qr_show:"نمایش کد QR",qr_hide:"پنهان کردن کد QR",copy:"کپی",qr_label:"کد QR",
+import_btn:"وارد کردن",qr_show:"کد QR",qr_hide:"پنهان کردن",copy:"کپی",qr_label:"کد QR",
 toast_copied:"کپی شد",toast_lang_na:"ترجمه هنوز در دسترس نیست",
 hint_path:"خالی بگذارید تا UUID به‌صورت خودکار ایجاد شود؛ یا مسیر سفارشی وارد کنید، یا روی دکمه کلیک کنید تا ایجاد شود.",
 edit:"ویرایش",delete:"حذف",upstream_links:"لینک‌های منبع",self_default:"اشتراک من",self_suffix:" (من)",visitor:"اشتراک مهمان",expired_tpl:" · منقضی شده ({date})",valid_tpl:" · معتبر تا {date}"
