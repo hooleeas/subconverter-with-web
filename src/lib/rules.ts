@@ -1,5 +1,6 @@
 import type {Store} from './db.js';
 import {LOCAL_RULE_PREFIX} from './local-subconfigs.js';
+import {RULE_FILES} from './rules-data.js';
 export interface RuleConfig {groups:Array<{name:string,type:string,proxies:string[];url?:string;interval?:number;tolerance?:number}>;rules:string[]}
 // Parsed rule sets are deterministic per template. Keep them in memory so
 // a warm isolate does not re-fetch and re-parse 17k rules on every
@@ -47,13 +48,15 @@ export function timeoutSignal(ms: number): AbortSignal {
 }
 
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string):Promise<string>{
- // Bundled rule files ship as static assets (public/_rules/ACL4SSR).
- // On edge runtimes prefer a plain fetch to our own origin: the ASSETS
- // binding is not reliably present on EdgeOne (its fallback `next()`
- // does not fetch arbitrary paths), while a same-origin fetch serves
- // the static file directly. Fall back to ASSETS, then GitHub.
+ // Bundled rule files are inlined in the function bundle (RULE_FILES).
+ // Read from memory first: no fetch at all, so the edge function cannot
+ // be killed by a slow GitHub/Blob/ASSETS read (HTTP 545). Fall back to
+ // a plain same-origin fetch, then ASSETS, then GitHub for files that
+ // were not bundled (e.g. a template added without rebuilding).
  if(url.startsWith(LOCAL_RULE_PREFIX)){
   const rest=url.slice(LOCAL_RULE_PREFIX.length);
+  const bundled=RULE_FILES[rest];
+  if(bundled!==undefined)return bundled;
   if(assetBase){
    try{
     const res=await fetcher(assetBase+rest);
