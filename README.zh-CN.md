@@ -1,6 +1,6 @@
 # subconverter-with-web
 
-订阅转换 — C++ subconverter 的 TypeScript + Hono 重写版。把代理订阅链接转换成 Base64、Clash、sing-box、Surge、Loon、Quantumult X 六种格式，带网页管理面板。
+订阅转换 — 我的 C++ 项目 [subconverter-new](https://github.com/hooleeas/subconverter-new) 的 TypeScript + Hono 重写版。把代理订阅链接转换成 Base64、Clash、sing-box、Surge、Loon、Quantumult X 六种格式，带网页管理面板。
 
 [English](README.md) · [فارسی](README.fa.md)
 

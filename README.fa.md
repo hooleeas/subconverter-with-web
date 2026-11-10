@@ -2,7 +2,7 @@
 
 # subconverter-with-web
 
-تبدیل اشتراک — بازنویسی subconverter با TypeScript و Hono. لینک‌های اشتراک پروکسی را به شش قالب Base64، Clash، sing-box، Surge، Loon و Quantumult X تبدیل می‌کند، با پنل مدیریت وب.
+تبدیل اشتراک — بازنویسی پروژه C++ من [subconverter-new](https://github.com/hooleeas/subconverter-new) با TypeScript و Hono. لینک‌های اشتراک پروکسی را به شش قالب Base64، Clash، sing-box، Surge، Loon و Quantumult X تبدیل می‌کند، با پنل مدیریت وب.
 
 [English](README.md) · [中文](README.zh-CN.md)
 
