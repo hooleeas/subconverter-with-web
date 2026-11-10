@@ -47,17 +47,25 @@ export function timeoutSignal(ms: number): AbortSignal {
 }
 
 export async function fetchRuleText(url:string,fetcher:typeof fetch=fetch,assets?:{fetch:(req:Request)=>Promise<Response>},assetBase?:string):Promise<string>{
- // Bundled rule files ship as static assets (public/_rules/ACL4SSR). On edge
- // runtimes read them from the ASSETS binding instead of GitHub: fetching
- // 15 lists from raw.githubusercontent.com at request time is slow and
- // gets the function killed (HTTP 545). The asset URL must use the real
- // request origin (assetBase): a synthetic host makes the binding miss.
- // Fall back to GitHub if the binding is absent or the file is not deployed.
- if(url.startsWith(LOCAL_RULE_PREFIX)&&assets){
-  try{
-   const res=await assets.fetch(new Request((assetBase||'https://assets.local/_rules/ACL4SSR/Clash/')+url.slice(LOCAL_RULE_PREFIX.length)));
-   if(res.ok)return res.text();
-  }catch{}
+ // Bundled rule files ship as static assets (public/_rules/ACL4SSR).
+ // On edge runtimes prefer a plain fetch to our own origin: the ASSETS
+ // binding is not reliably present on EdgeOne (its fallback `next()`
+ // does not fetch arbitrary paths), while a same-origin fetch serves
+ // the static file directly. Fall back to ASSETS, then GitHub.
+ if(url.startsWith(LOCAL_RULE_PREFIX)){
+  const rest=url.slice(LOCAL_RULE_PREFIX.length);
+  if(assetBase){
+   try{
+    const res=await fetcher(assetBase+rest);
+    if(res.ok)return res.text();
+   }catch{}
+  }
+  if(assets){
+   try{
+    const res=await assets.fetch(new Request((assetBase||'https://assets.local/_rules/ACL4SSR/Clash/')+rest));
+    if(res.ok)return res.text();
+   }catch{}
+  }
  }
  let fetchUrl=url;
  if(url.startsWith(LOCAL_RULE_PREFIX))fetchUrl='https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/'+url.slice(LOCAL_RULE_PREFIX.length);

@@ -413,16 +413,15 @@ app.get('/sub', async c => {
 // The bundled files live as static assets under /_rules (not /ACL4SSR):
 // a static file at /ACL4SSR/... would be served by the platform as
 // application/octet-stream before the function runs, triggering a
-// download. Read it via ASSETS and return it as text/plain instead.
+// download. Fetch it from /_rules via a plain same-origin fetch and
+// return it as text/plain so it displays instead of downloading.
 app.get('/ACL4SSR/Clash/config/:file', async c => {
   const file = c.req.param('file');
   if (!/^[\w.-]+\.ini$/i.test(file)) return c.text('404 Not found', 404);
-  if (c.env?.ASSETS) {
-    try {
-      const res = await c.env.ASSETS.fetch(new Request(new URL('/_rules/ACL4SSR/Clash/config/'+file, c.req.url)));
-      if (res.ok) return c.text(await res.text(), 200, { 'content-type': 'text/plain; charset=utf-8' });
-    } catch {}
-  }
+  try {
+    const res = await fetch(new URL('/_rules/ACL4SSR/Clash/config/'+file, c.req.url));
+    if (res.ok) return c.text(await res.text(), 200, { 'content-type': 'text/plain; charset=utf-8' });
+  } catch {}
   const db = store(c);
   if (db) {
     const content = await db.get(`cache:${LOCAL_RULE_PREFIX}config/${file}`);
