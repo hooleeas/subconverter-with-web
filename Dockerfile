@@ -5,9 +5,7 @@ COPY tsconfig.json ./
 RUN npm ci --ignore-scripts
 COPY src ./src
 COPY public ./public
-COPY scripts ./scripts
-COPY ACL4SSR ./ACL4SSR
-RUN npm run build
+RUN npx tsc
 
 FROM node:22-alpine
 WORKDIR /app
@@ -16,6 +14,5 @@ COPY package*.json ./
 RUN npm ci --omit=dev && mkdir -p data
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/public ./public
-COPY ACL4SSR ./ACL4SSR
 EXPOSE 25501
 CMD ["npm","start"]

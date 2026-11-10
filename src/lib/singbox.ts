@@ -143,12 +143,30 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig) {
     { type: 'block', tag: 'REJECT' },
   ];
   const groupTags = new Set([...nodeTags, ...groups.map(({ group }) => group.name), ...(!hasConfiguredGroups ? ['PROXY'] : []), 'direct', 'REJECT', 'GLOBAL']);
+  // Group rules by (match key, outbound): 17k single-value rules blow up
+  // the config size and iOS fails to start the service on it. Merge values
+  // into arrays like the C++ subconverter does.
+  const parsedRules = (ruleConfig?.rules || []).map(rule => routeRule(rule, groupTags)).filter((rule): rule is Record<string, unknown> => Boolean(rule));
+  const grouped = new Map<string, Record<string, unknown>>();
+  for (const r of parsedRules) {
+    const key = Object.keys(r).find(k => k !== 'action' && k !== 'outbound');
+    if (!key) continue;
+    const gk = key + '::' + String(r.outbound);
+    const existing = grouped.get(gk);
+    if (existing) {
+      const vals = existing[key] as string[];
+      const add = r[key] as string[];
+      for (const v of add) if (!vals.includes(v)) vals.push(v);
+    } else {
+      grouped.set(gk, { [key]: [...(r[key] as string[])], action: 'route', outbound: r.outbound });
+    }
+  }
   const rules = [
     { action: 'sniff' },
     { protocol: 'dns', action: 'hijack-dns' },
     { clash_mode: 'Global', outbound: 'GLOBAL' },
     { clash_mode: 'Direct', outbound: 'direct' },
-    ...(ruleConfig?.rules || []).map(rule => routeRule(rule, groupTags)).filter((rule): rule is Record<string, unknown> => Boolean(rule)),
+    ...grouped.values(),
   ];
   const finalGroup = configuredGroups.find(group => /节点选择|proxy/i.test(group.name))?.name || groups[0]?.group.name || 'PROXY';
   const final = groupTags.has(finalGroup) ? finalGroup : 'PROXY';

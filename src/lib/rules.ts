@@ -33,6 +33,12 @@ function resolveRuleUrl(resource: string, templateUrl: string): string {
   const localPath = 'rules/ACL4SSR/Clash/';
   if (resource.startsWith(localPath)) return `${LOCAL_RULE_PREFIX}${resource.slice(localPath.length)}`;
  }
+ const forkBase = 'https://raw.githubusercontent.com/hooleeas/ACL4SSR/refs/heads/master/Clash/';
+ if (templateUrl.startsWith(forkBase)) {
+  const localPath = 'rules/ACL4SSR/Clash/';
+  if (resource.startsWith(localPath)) return forkBase + resource.slice(localPath.length);
+  if (resource.startsWith(forkBase)) return resource;
+ }
  return new URL(resource, templateUrl).toString();
 }
 
