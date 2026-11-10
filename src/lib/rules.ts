@@ -1,8 +1,13 @@
 import type {Store} from './db.js';
 import {LOCAL_RULE_PREFIX} from './local-subconfigs.js';
 export interface RuleConfig {groups:Array<{name:string,type:string,proxies:string[];url?:string;interval?:number;tolerance?:number}>;rules:string[]}
+// Parsed rule sets are deterministic per template. Keep them in memory so
+// a warm isolate does not re-fetch and re-parse 17k rules on every
+// request (that CPU burst is what gets the edge function killed).
+const ruleCache=new Map<string,RuleConfig>();
 export async function loadRules(store:Store|null, templateUrl:string|undefined, fetcher:typeof fetch=fetch, assets?:{fetch:(req:Request)=>Promise<Response>}, assetBase?:string):Promise<RuleConfig>{
  if(!templateUrl)throw new Error('No SUBCONFIG selected');
+ const cached=ruleCache.get(templateUrl);if(cached)return cached;
  const ini=await cachedText(store,templateUrl,fetcher,assets,assetBase);const entries:Array<{group:string,url:string}>=[];const groups:Array<{name:string,type:string,proxies:string[]}>=[];
  for(const line of ini.split(/\r?\n/)){const s=line.trim();if(!s||s.startsWith(';')||s.startsWith('#'))continue;
   if(s.startsWith('ruleset=')){const v=s.slice(8),comma=v.indexOf(',');if(comma<0)continue;const group=v.slice(0,comma).trim(),resource=v.slice(comma+1).trim();const url=resource.startsWith('[]')?resource:resource.replace(/,\s*\d+\s*$/,'');entries.push({group,url});}
@@ -17,7 +22,7 @@ export async function loadRules(store:Store|null, templateUrl:string|undefined, 
  // concurrency at 5.
  const ruleLists:string[][]=[];for(let i=0;i<entries.length;i+=5){ruleLists.push(...await Promise.all(entries.slice(i,i+5).map(loadOne)));}
  const rules=ruleLists.flat();
- if(!groups.length)groups.push({name:'PROXY',type:'select',proxies:[]});if(!rules.some(rule=>/^(?:MATCH|FINAL),/i.test(rule)))rules.push(`MATCH,${groups.find(g=>/节点选择|proxy/i.test(g.name))?.name||groups[0].name}`);return{groups,rules};
+ if(!groups.length)groups.push({name:'PROXY',type:'select',proxies:[]});if(!rules.some(rule=>/^(?:MATCH|FINAL),/i.test(rule)))rules.push(`MATCH,${groups.find(g=>/节点选择|proxy/i.test(g.name))?.name||groups[0].name}`);const out={groups,rules};ruleCache.set(templateUrl,out);return out;
 }
 
 function resolveRuleUrl(resource: string, templateUrl: string): string {
