@@ -82,7 +82,7 @@ The file name follows the subscription name (`<name>.yaml`, `<name>.json`, `<nam
 
 ```sh
 docker run -d --name subconverter-web \
-  -p 127.0.0.1:3000:3000 \
+  -p 127.0.0.1:25501:25501 \
   -v /opt/subconverter-with-web/data:/app/data \
   --restart unless-stopped \
   hooleeas/subconverter-with-web:latest
@@ -95,7 +95,7 @@ services:
   subconverter-web:
     image: hooleeas/subconverter-with-web:latest
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:25501:25501"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -166,7 +166,7 @@ Admin login is optional: if no admin account is set, the panel is open. Set one 
 ```sh
 npm ci
 npm run build   # tsc
-npm run dev     # local server on :3000 (SQLite)
+npm run dev     # local server on :25501 (SQLite)
 ```
 
 ## License

@@ -96,7 +96,7 @@ jobs:
           cat > stage/README.md <<'EOF'
           # subconverter-with-web (portable)
           Run: `./run.sh` (or `./node dist/node.js`)
-          Env: `PORT` (default 3000), `DB_PATH` (default data/app.db),
+          Env: `PORT` (default 25501), `DB_PATH` (default data/app.db),
           `ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).
           Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to the `node` binary.
           EOF
@@ -224,7 +224,7 @@ jobs:
           cat > stage/README.md <<'EOF'
           # subconverter-with-web (portable)
           Run: `./run.sh` (or `./node dist/node.js`)
-          Env: `PORT` (default 3000), `DB_PATH` (default data/app.db),
+          Env: `PORT` (default 25501), `DB_PATH` (default data/app.db),
           `ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).
           Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to the `node` binary.
           EOF
@@ -308,7 +308,7 @@ jobs:
           Copy-Item -Recurse prod-deps/node_modules -Destination stage/
           Copy-Item -Recurse public, ACL4SSR -Destination stage/
           Set-Content -Path stage/run.bat -Value '@echo off', 'cd /d "%~dp0"', '"%~dp0node.exe" "%~dp0dist/node.js" %*'
-          Set-Content -Path stage/README.md -Value '# subconverter-with-web (portable)', 'Run: `run.bat` (or `node.exe dist/node.js`)', 'Env: `PORT` (default 3000), `DB_PATH` (default data/app.db),', '`ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).', 'Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to `node.exe`.'
+          Set-Content -Path stage/README.md -Value '# subconverter-with-web (portable)', 'Run: `run.bat` (or `node.exe dist/node.js`)', 'Env: `PORT` (default 25501), `DB_PATH` (default data/app.db),', '`ADMIN_USERNAME` / `ADMIN_PASSWORD` (optional; no password = open admin).', 'Keep `dist/`, `node_modules/`, `public/` and `ACL4SSR/` next to `node.exe`.'
       - name: Smoke test
         run: |
           New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP/smoke" | Out-Null

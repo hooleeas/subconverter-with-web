@@ -84,7 +84,7 @@ flowchart LR
 
 ```sh
 docker run -d --name subconverter-web \
-  -p 127.0.0.1:3000:3000 \
+  -p 127.0.0.1:25501:25501 \
   -v /opt/subconverter-with-web/data:/app/data \
   --restart unless-stopped \
   hooleeas/subconverter-with-web:latest
@@ -97,7 +97,7 @@ services:
   subconverter-web:
     image: hooleeas/subconverter-with-web:latest
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:25501:25501"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -168,7 +168,7 @@ edgeone makers deploy -n subconverter-with-web
 ```sh
 npm ci
 npm run build   # tsc
-npm run dev     # سرور محلی روی :3000 (SQLite)
+npm run dev     # سرور محلی روی :25501 (SQLite)
 ```
 
 ## مجوز

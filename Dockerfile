@@ -9,11 +9,11 @@ RUN npm run build
 
 FROM node:22-alpine
 WORKDIR /app
-ENV NODE_ENV=production PORT=3000 DB_PATH=/app/data/app.db
+ENV NODE_ENV=production PORT=25501 DB_PATH=/app/data/app.db
 COPY package*.json ./
 RUN npm ci --omit=dev && mkdir -p data
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/public ./public
 COPY ACL4SSR ./ACL4SSR
-EXPOSE 3000
+EXPOSE 25501
 CMD ["npm","start"]
