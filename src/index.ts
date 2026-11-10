@@ -598,6 +598,15 @@ async function backendVersionFor(db: Store, record: any): Promise<string> {
   } catch { return APP_VERSION; }
 }
 function defaultSubName(name:string,createdAt?:string):string{const _t=String(name||'').trim();if(_t)return _t;let _d=new Date();if(createdAt){const _c=new Date(createdAt);if(!isNaN(_c.getTime()))_d=_c}const _fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});const _pt=Object.fromEntries(_fmt.formatToParts(_d).map(p=>[p.type,p.value]));return 'sub-'+_pt.year+'-'+_pt.month+'-'+_pt.day+'-'+_pt.hour+_pt.minute}
+// HTTP header values must be ByteString (Latin-1); a Chinese name (e.g. 免费家宽) makes
+// Headers.set throw TypeError and the whole request 500s. Encode non-ASCII names as
+// RFC 2047 encoded-words so the header stays valid and clients that decode it see the name.
+function encodeHeaderValue(value:string):string{
+  if(/^[\x20-\x7E]*$/.test(value))return value;
+  const bytes=new TextEncoder().encode(value),words:string[]=[];
+  for(let i=0;i<bytes.length;i+=45){let bin='';for(const b of bytes.subarray(i,i+45))bin+=String.fromCharCode(b);words.push('=?UTF-8?B?'+btoa(bin)+'?=')}
+  return words.join(' ');
+}
 async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Response> {
   if(record.expiresAt){const t=new Date(record.expiresAt).getTime();if(!isNaN(t)&&t<=Date.now()){await db.delete('aggregate:'+id).catch(()=>{});return c.text('404 Not found',404)}}
   const sources=await resolveAggregateSources(db,record);
@@ -608,7 +617,7 @@ async function serveAggregate(c:any,id:string,record:any,db:Store):Promise<Respo
   const decorate=(response:Response)=>{
     const headers=new Headers(response.headers);headers.set('cache-control','no-store');
     const _dn=defaultSubName(record.name,record.createdAt);
-    headers.set('profile-title',_dn);
+    headers.set('profile-title',encodeHeaderValue(_dn));
     headers.set('profile-web-page-url',publicUrl(c,aggregatePath(record,id)));
     return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
   };
