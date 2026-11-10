@@ -182,6 +182,5 @@ export function singbox(nodes: Node[], ruleConfig?: RuleConfig) {
       rules,
       final: routeFinal,
     },
-    ntp: { enabled: true, server: 'time.apple.com', server_port: 123, interval: '30m' },
   };
 }
